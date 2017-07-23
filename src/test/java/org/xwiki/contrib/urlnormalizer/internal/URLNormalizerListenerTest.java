@@ -43,7 +43,6 @@ import org.xwiki.test.mockito.MockitoComponentMockingRule;
 import com.xpn.xwiki.doc.XWikiDocument;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
@@ -62,7 +61,7 @@ public class URLNormalizerListenerTest
 {
     @Rule
     public final MockitoComponentMockingRule<URLNormalizerListener> mocker =
-            new MockitoComponentMockingRule<>(URLNormalizerListener.class);
+        new MockitoComponentMockingRule<>(URLNormalizerListener.class);
 
     private ResourceReferenceNormalizer resourceReferenceNormalizer;
 
@@ -90,7 +89,8 @@ public class URLNormalizerListenerTest
      *
      * @param xdom the {@link XDOM} object to use in the mock
      */
-    private XWikiDocument mockXWikiDocument(XDOM xdom) {
+    private XWikiDocument mockXWikiDocument(XDOM xdom)
+    {
         XWikiDocument fakeDocument = mock(XWikiDocument.class);
         when(fakeDocument.getXDOM()).thenReturn(xdom);
         when(fakeDocument.getSyntax()).thenReturn(Syntax.XWIKI_2_1);
@@ -98,14 +98,15 @@ public class URLNormalizerListenerTest
         return fakeDocument;
     }
 
-    private XDOM mockXDOM(List<ResourceReference> resourceReferences) {
+    private XDOM mockXDOM(List<ResourceReference> resourceReferences)
+    {
         XDOMBuilder builder = new XDOMBuilder();
 
         // Create the LinkBlocks corresponding to the ResourceReference
         List<LinkBlock> linkBlocks = new ArrayList<>();
         for (ResourceReference resourceReference : resourceReferences) {
             linkBlocks.add(new LinkBlock(
-                    Collections.EMPTY_LIST, resourceReference, true, Collections.EMPTY_MAP));
+                Collections.EMPTY_LIST, resourceReference, true, Collections.EMPTY_MAP));
         }
 
         // Add the LinkBlocks to a new XDOM
@@ -117,11 +118,11 @@ public class URLNormalizerListenerTest
     }
 
     @Test
-    public void testWithNoLink() throws Exception
+    public void onEventWithNoLink() throws Exception
     {
         XDOM xdom = mock(XDOM.class);
         when(xdom.getBlocks(any(ClassBlockMatcher.class), eq(Block.Axes.DESCENDANT_OR_SELF)))
-                .thenReturn(Collections.emptyList());
+            .thenReturn(Collections.emptyList());
 
         XWikiDocument fakeDocument = mockXWikiDocument(xdom);
 
@@ -129,13 +130,13 @@ public class URLNormalizerListenerTest
 
         verify(fakeDocument, never()).setContent(any(XDOM.class));
         assertEquals(
-                xdom.getBlocks(new ClassBlockMatcher(LinkBlock.class), Block.Axes.DESCENDANT_OR_SELF),
-                fakeDocument.getXDOM().getBlocks(new ClassBlockMatcher(LinkBlock.class), Block.Axes.DESCENDANT_OR_SELF)
+            xdom.getBlocks(new ClassBlockMatcher(LinkBlock.class), Block.Axes.DESCENDANT_OR_SELF),
+            fakeDocument.getXDOM().getBlocks(new ClassBlockMatcher(LinkBlock.class), Block.Axes.DESCENDANT_OR_SELF)
         );
     }
 
     @Test
-    public void testWithOneLink() throws Exception
+    public void onEventWithOneLink() throws Exception
     {
         ResourceReference originalReference = mock(ResourceReference.class);
 
@@ -146,5 +147,4 @@ public class URLNormalizerListenerTest
 
         verify(fakeDocument, times(1)).setContent(any(XDOM.class));
     }
-
 }
