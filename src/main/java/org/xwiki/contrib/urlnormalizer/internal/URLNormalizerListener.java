@@ -26,6 +26,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.xwiki.bridge.event.DocumentUpdatingEvent;
 import org.xwiki.component.annotation.Component;
@@ -155,7 +156,8 @@ public class URLNormalizerListener extends AbstractEventListener
                     document.setContent(xdom);
                 }
             } catch (XWikiException e) {
-                logger.warn(String.format("Unable to normalize URLs for document [%s]", document.getTitle()));
+                logger.warn("Unable to normalize URLs for document [{}]. Root error [{}]", document.getTitle(),
+                    ExceptionUtils.getRootCauseMessage(e));
             }
         }
     }
