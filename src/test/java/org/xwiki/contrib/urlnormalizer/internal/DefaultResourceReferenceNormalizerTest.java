@@ -62,7 +62,7 @@ public class DefaultResourceReferenceNormalizerTest
 
         ResourceTypeResolver<ExtendedURL> typeResolver = this.mocker.getInstance(
             new DefaultParameterizedType(null, ResourceTypeResolver.class, ExtendedURL.class));
-        org.xwiki.resource.ResourceType type = new org.xwiki.resource.ResourceType("bin");
+        org.xwiki.resource.ResourceType type = new org.xwiki.resource.ResourceType("entity");
         when(typeResolver.resolve(any(ExtendedURL.class), any())).thenReturn(type);
 
         ResourceReferenceResolver<ExtendedURL> resolver = this.mocker.getInstance(

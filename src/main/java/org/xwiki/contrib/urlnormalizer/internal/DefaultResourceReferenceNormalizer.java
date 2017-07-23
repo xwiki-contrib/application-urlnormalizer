@@ -81,7 +81,7 @@ public class DefaultResourceReferenceNormalizer implements ResourceReferenceNorm
                         servletRequest.getHttpServletRequest().getContextPath());
                     org.xwiki.resource.ResourceType type =
                         this.typeResolver.resolve(extendedURL, Collections.emptyMap());
-                    if (type.getId().equals("bin")) {
+                    if (type.getId().equals("entity")) {
                         EntityResourceReference err =
                             (EntityResourceReference) this.resolver.resolve(extendedURL, type, Collections.emptyMap());
                         // At this point we're sure that the URL is pointing to a wiki link
