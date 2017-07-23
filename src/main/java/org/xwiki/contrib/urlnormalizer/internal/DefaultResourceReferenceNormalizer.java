@@ -25,6 +25,12 @@ import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.urlnormalizer.ResourceReferenceNormalizer;
 import org.xwiki.rendering.listener.reference.ResourceReference;
 
+/**
+ * This is the default implementation of {@link ResourceReferenceNormalizer}.
+ *
+ * @version $Id$
+ * @since 1.0
+ */
 @Component
 @Singleton
 public class DefaultResourceReferenceNormalizer implements ResourceReferenceNormalizer

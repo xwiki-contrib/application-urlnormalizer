@@ -31,5 +31,10 @@ import org.xwiki.rendering.listener.reference.ResourceReference;
 @Role
 public interface ResourceReferenceNormalizer
 {
+    /**
+     * Normalize the given {@link ResourceReference}.
+     * @param reference the reference to normalize
+     * @return the new reference
+     */
     ResourceReference normalize(ResourceReference reference);
 }

@@ -1,1 +1,2 @@
 org.xwiki.contrib.urlnormalizer.internal.DefaultResourceReferenceNormalizer
+org.xwiki.contrib.urlnormalizer.internal.URLNormalizerListener
