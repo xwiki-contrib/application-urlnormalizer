@@ -29,11 +29,7 @@
   </parent>
   <artifactId>listener-urlnormalizer</artifactId>
   <version>1.0-SNAPSHOT</version>
-<<<<<<< HEAD
-  <name>URL Normalizer - Parent POM</name>
-=======
   <name>Wiki Link URL Normalizer</name>
->>>>>>> URLNORMALZ-1: Implement first version
   <packaging>jar</packaging>
   <description>Convert local URLs into wiki links</description>
   <scm>
