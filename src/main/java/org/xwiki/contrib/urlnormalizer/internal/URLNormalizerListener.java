@@ -24,24 +24,22 @@ import java.util.List;
 import javax.inject.Named;
 
 import org.xwiki.component.annotation.Component;
+import org.xwiki.observation.AbstractEventListener;
 import org.xwiki.observation.EventListener;
 import org.xwiki.observation.event.Event;
 
 @Component
-@Named("URLNormaizer")
-public class URLNormalizerListener implements EventListener
+@Named(URLNormalizerListener.NAME)
+public class URLNormalizerListener extends AbstractEventListener
 {
-    @Override public String getName()
+    public static final String NAME = "URLNormalizer";
+
+    public URLNormalizerListener()
     {
-        return null;
+        super (NAME);
     }
 
-    @Override public List<Event> getEvents()
-    {
-        return null;
-    }
-
-    @Override public void onEvent(Event event, Object source, Object data)
+        @Override public void onEvent(Event event, Object source, Object data)
     {
 
     }
