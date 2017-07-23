@@ -17,27 +17,21 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.xwiki.contrib.urlnormalizer;
+package org.xwiki.contrib.urlnormalizer.internal;
 
-import javax.inject.Named;
+import javax.inject.Singleton;
 
 import org.xwiki.component.annotation.Component;
-import org.xwiki.observation.AbstractEventListener;
-import org.xwiki.observation.event.Event;
+import org.xwiki.contrib.urlnormalizer.ResourceReferenceNormalizer;
+import org.xwiki.rendering.listener.reference.ResourceReference;
 
 @Component
-@Named(URLNormalizerListener.NAME)
-public class URLNormalizerListener extends AbstractEventListener
+@Singleton
+public class DefaultResourceReferenceNormalizer implements ResourceReferenceNormalizer
 {
-    public static final String NAME = "URLNormalizer";
-
-    public URLNormalizerListener()
+    @Override
+    public ResourceReference normalize(ResourceReference reference)
     {
-        super (NAME);
-    }
-
-        @Override public void onEvent(Event event, Object source, Object data)
-    {
-
+        return null;
     }
 }

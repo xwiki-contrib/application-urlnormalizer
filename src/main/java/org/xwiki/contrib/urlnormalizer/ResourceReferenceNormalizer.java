@@ -19,25 +19,17 @@
  */
 package org.xwiki.contrib.urlnormalizer;
 
-import javax.inject.Named;
+import org.xwiki.component.annotation.Role;
+import org.xwiki.rendering.listener.reference.ResourceReference;
 
-import org.xwiki.component.annotation.Component;
-import org.xwiki.observation.AbstractEventListener;
-import org.xwiki.observation.event.Event;
-
-@Component
-@Named(URLNormalizerListener.NAME)
-public class URLNormalizerListener extends AbstractEventListener
+/**
+ * Normalize a {@link ResourceReference} by checking if it is a URL pointing to a wiki link and if so transform it
+ * into a Document Resource Reference.
+ *
+ * @version $Id$
+ */
+@Role
+public interface ResourceReferenceNormalizer
 {
-    public static final String NAME = "URLNormalizer";
-
-    public URLNormalizerListener()
-    {
-        super (NAME);
-    }
-
-        @Override public void onEvent(Event event, Object source, Object data)
-    {
-
-    }
+    ResourceReference normalize(ResourceReference reference);
 }
