@@ -2,7 +2,9 @@
 
 Convert local URLs into wiki links
 
-* Project Lead: [Vincent Massol](http://www.xwiki.org/xwiki/bin/view/XWiki/VincentMassol)
+* Project Leads:
+  * [Vincent Massol](http://www.xwiki.org/xwiki/bin/view/XWiki/VincentMassol)
+  * [Clément Aubin](http://www.xwiki.org/xwiki/bin/view/XWiki/caubin)
 * [Documentation & Download](http://extensions.xwiki.org/xwiki/bin/view/Extension/WikiLinkURLNormalizer/)
 * [Issue Tracker](http://jira.xwiki.org/browse/URLNORMALZ)
 * Communication: [Mailing List](http://dev.xwiki.org/xwiki/bin/view/Community/MailingLists), [IRC](http://dev.xwiki.org/xwiki/bin/view/Community/IRC)
