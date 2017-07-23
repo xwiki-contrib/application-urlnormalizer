@@ -211,6 +211,7 @@ public class URLNormalizerListener extends AbstractEventListener
                 baseObject.setLargeStringValue(propertyName, normalizedContent);
             }
         } catch (ParseException e) {
+            // The parser for the syntax of the document may no fit the syntax used in a XProperty.
         }
     }
 
