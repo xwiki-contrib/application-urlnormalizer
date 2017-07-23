@@ -43,6 +43,7 @@ import org.xwiki.test.mockito.MockitoComponentMockingRule;
 import com.xpn.xwiki.doc.XWikiDocument;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
@@ -67,9 +68,13 @@ public class URLNormalizerListenerTest
 
     private ComponentManager componentManager;
 
-    private ResourceReference fakeRef1;
+    // A link to the wiki written as a standard wiki link
+    private ResourceReference internalLinkReference;
 
-    private ResourceReference fakeRef2;
+    // A link to the wiki written with an absolute URL
+    private ResourceReference externalLinkReference;
+
+    private ResourceReference normalizedExternalLinkReference;
 
     @Before
     public void setUp() throws Exception
@@ -79,9 +84,14 @@ public class URLNormalizerListenerTest
         componentManager = mocker.registerMockComponent(ComponentManager.class);
         when(componentManager.hasComponent(BlockRenderer.class, Syntax.XWIKI_2_1.toIdString())).thenReturn(true);
 
-        fakeRef1 = mock(ResourceReference.class);
+        internalLinkReference = mock(ResourceReference.class);
 
-        fakeRef2 = mock(ResourceReference.class);
+        externalLinkReference = mock(ResourceReference.class);
+
+        normalizedExternalLinkReference = mock(ResourceReference.class);
+
+        when(resourceReferenceNormalizer.normalize(internalLinkReference)).thenReturn(internalLinkReference);
+        when(resourceReferenceNormalizer.normalize(externalLinkReference)).thenReturn(normalizedExternalLinkReference);
     }
 
     /**
@@ -136,15 +146,36 @@ public class URLNormalizerListenerTest
     }
 
     @Test
-    public void onEventWithOneLink() throws Exception
+    public void onEventWithOneExternalLink() throws Exception
     {
-        ResourceReference originalReference = mock(ResourceReference.class);
+        ResourceReference externalLinkReference = mock(ResourceReference.class);
 
-        XDOM xdom = mockXDOM(Arrays.asList(originalReference));
+        XDOM xdom = mockXDOM(Arrays.asList(externalLinkReference));
         XWikiDocument fakeDocument = mockXWikiDocument(xdom);
 
         mocker.getComponentUnderTest().onEvent(null, fakeDocument, null);
 
         verify(fakeDocument, times(1)).setContent(any(XDOM.class));
+
+        List<LinkBlock> newLinkBlocks = xdom.getBlocks(new ClassBlockMatcher(LinkBlock.class),
+                Block.Axes.DESCENDANT_OR_SELF);
+        assertEquals(1, newLinkBlocks.size());
+        assertNotEquals(externalLinkReference, newLinkBlocks.get(0).getReference());
+    }
+
+    @Test
+    public void onEventWithOneInternalLink() throws Exception
+    {
+        XDOM xdom = mockXDOM(Arrays.asList(internalLinkReference));
+        XWikiDocument fakeDocument = mockXWikiDocument(xdom);
+
+        mocker.getComponentUnderTest().onEvent(null, fakeDocument, null);
+
+        verify(fakeDocument, times(1)).setContent(any(XDOM.class));
+
+        List<LinkBlock> newLinkBlocks = xdom.getBlocks(new ClassBlockMatcher(LinkBlock.class),
+                Block.Axes.DESCENDANT_OR_SELF);
+        assertEquals(1, newLinkBlocks.size());
+        assertEquals(internalLinkReference, newLinkBlocks.get(0).getReference());
     }
 }
