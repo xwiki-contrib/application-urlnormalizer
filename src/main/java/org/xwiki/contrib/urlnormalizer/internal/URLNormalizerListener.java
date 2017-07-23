@@ -19,6 +19,7 @@
  */
 package org.xwiki.contrib.urlnormalizer.internal;
 
+import java.io.StringReader;
 import java.util.List;
 
 import javax.inject.Inject;
@@ -28,6 +29,7 @@ import javax.inject.Singleton;
 import org.slf4j.Logger;
 import org.xwiki.bridge.event.DocumentUpdatingEvent;
 import org.xwiki.component.annotation.Component;
+import org.xwiki.component.manager.ComponentLookupException;
 import org.xwiki.component.manager.ComponentManager;
 import org.xwiki.contrib.urlnormalizer.ResourceReferenceNormalizer;
 import org.xwiki.observation.AbstractEventListener;
@@ -37,10 +39,17 @@ import org.xwiki.rendering.block.LinkBlock;
 import org.xwiki.rendering.block.XDOM;
 import org.xwiki.rendering.block.match.ClassBlockMatcher;
 import org.xwiki.rendering.listener.reference.ResourceReference;
+import org.xwiki.rendering.parser.ParseException;
+import org.xwiki.rendering.parser.Parser;
 import org.xwiki.rendering.renderer.BlockRenderer;
+import org.xwiki.rendering.renderer.printer.DefaultWikiPrinter;
+import org.xwiki.rendering.renderer.printer.WikiPrinter;
 
+import com.xpn.xwiki.XWikiContext;
 import com.xpn.xwiki.XWikiException;
 import com.xpn.xwiki.doc.XWikiDocument;
+import com.xpn.xwiki.objects.BaseObject;
+import com.xpn.xwiki.objects.ObjectDiff;
 
 /**
  * This listener is used to normalize document content and document XObjects.
@@ -79,10 +88,48 @@ public class URLNormalizerListener extends AbstractEventListener
     public void onEvent(Event event, Object source, Object data)
     {
         XWikiDocument document = (XWikiDocument) source;
+        XWikiContext context = (XWikiContext) data;
+
         normalizeDocumentContent(document);
+        normalizeDocumentXObjects(document, context);
+    }
 
-        // TODO: Use {@link XWikiDocument#getObjectDiff()}
 
+    private void normalizeDocumentXObjects(XWikiDocument document, XWikiContext context)
+    {
+        // Get last diff of the document objects
+        List<List<ObjectDiff>> documentObjectDiff =
+                document.getObjectDiff(document.getOriginalDocument(), document, context);
+
+        /**
+         * Just as what is done in {@link #normalizeDocumentContent(XWikiDocument)}, we have to check if a
+         * {@link org.xwiki.rendering.parser.Parser} and a {@link BlockRenderer} exist for the given syntax.
+         */
+        if (componentManager.hasComponent(BlockRenderer.class, document.getSyntax().toIdString())
+                && componentManager.hasComponent(Parser.class, document.getSyntax().toIdString())) {
+
+            try {
+                // Retrieve the parser and the renderer that should be used in order to normalize XProperty contents
+                Parser parser = componentManager.getInstance(Parser.class, document.getSyntax().toIdString());
+                BlockRenderer blockRenderer = componentManager.getInstance(BlockRenderer.class,
+                        document.getSyntax().toIdString());
+
+                // Go through every object that has been modified
+                for (List<ObjectDiff> objectDiffs : documentObjectDiff) {
+                    // Go through every property modified
+                    for (ObjectDiff objectDiff : objectDiffs) {
+                        // We only normalize TextArea properties
+                        if (objectDiff.getPropType().equals("TextArea")) {
+                            BaseObject object =
+                                    document.getXObject(objectDiff.getXClassReference(), objectDiff.getNumber());
+
+                            normalizeBaseObject(object, objectDiff.getPropName(), parser, blockRenderer);
+                        }
+                    }
+                }
+            } catch (ComponentLookupException e) {
+            }
+        }
     }
 
     /**
@@ -91,13 +138,13 @@ public class URLNormalizerListener extends AbstractEventListener
      */
     private void normalizeDocumentContent(XWikiDocument document)
     {
-        XDOM xdom = document.getXDOM();
-
         /**
          * Ensure that we have a correct renderer for the syntax of the given document. If no renderer
          * is found, {@link XWikiDocument#setContent(XDOM)} will fail.
          */
         if (componentManager.hasComponent(BlockRenderer.class, document.getSyntax().toIdString())) {
+            XDOM xdom = document.getXDOM();
+
             try {
                 List<LinkBlock> linkBlocks = xdom.getBlocks(new ClassBlockMatcher(LinkBlock.class),
                         Block.Axes.DESCENDANT_OR_SELF);
@@ -128,6 +175,40 @@ public class URLNormalizerListener extends AbstractEventListener
 
             // Replace the previous LinkBlock in the XDOM
             linkBlock.getParent().replaceChild(newLinkBlock, linkBlock);
+        }
+    }
+
+    /**
+     * Normalize the content of the given {@link BaseObject}.
+     * We assume that {@link BaseObject#getLargeStringValue(String)} will work on this {@link BaseObject}.
+     *
+     * @param baseObject the {@link BaseObject} to normalize
+     * @param propertyName the name of the XProperty
+     * @param parser the parser to use
+     * @param blockRenderer the renderer to use
+     */
+    private void normalizeBaseObject(BaseObject baseObject, String propertyName, Parser parser,
+            BlockRenderer blockRenderer) {
+        // Get the content of the given XProperty
+        String content = baseObject.getLargeStringValue(propertyName);
+
+        try {
+            XDOM xdom = parser.parse(new StringReader(content));
+
+            List<LinkBlock> linkBlocks = xdom.getBlocks(new ClassBlockMatcher(LinkBlock.class),
+                    Block.Axes.DESCENDANT_OR_SELF);
+
+            if (linkBlocks.size() > 0) {
+                normalizeLinkBlocks(linkBlocks);
+
+                WikiPrinter wikiPrinter = new DefaultWikiPrinter();
+                blockRenderer.render(xdom, wikiPrinter);
+
+                String normalizedContent = wikiPrinter.toString();
+
+                baseObject.setLargeStringValue(propertyName, normalizedContent);
+            }
+        } catch (ParseException e) {
         }
     }
 
