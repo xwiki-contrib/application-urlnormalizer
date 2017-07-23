@@ -31,6 +31,7 @@ import org.xwiki.model.reference.EntityReference;
 import org.xwiki.model.reference.EntityReferenceSerializer;
 import org.xwiki.rendering.listener.reference.ResourceReference;
 import org.xwiki.rendering.listener.reference.ResourceType;
+import org.xwiki.resource.CreateResourceTypeException;
 import org.xwiki.resource.ResourceReferenceResolver;
 import org.xwiki.resource.ResourceTypeResolver;
 import org.xwiki.resource.entity.EntityResourceAction;
@@ -80,5 +81,26 @@ public class DefaultResourceReferenceNormalizerTest
         ResourceReference normalizedReference = this.mocker.getComponentUnderTest().normalize(reference);
 
         assertEquals("A.B", normalizedReference.getReference());
+    }
+
+    @Test
+    public void normalizeWhenUnsupportedResourceType() throws Exception
+    {
+        Container container = this.mocker.getInstance(Container.class);
+        ServletRequest request = mock(ServletRequest.class);
+        when(container.getRequest()).thenReturn(request);
+        HttpServletRequest httpRequest = mock(HttpServletRequest.class);
+        when(request.getHttpServletRequest()).thenReturn(httpRequest);
+        when(httpRequest.getContextPath()).thenReturn("xwiki");
+
+        ResourceTypeResolver<ExtendedURL> typeResolver = this.mocker.getInstance(
+            new DefaultParameterizedType(null, ResourceTypeResolver.class, ExtendedURL.class));
+        when(typeResolver.resolve(any(ExtendedURL.class), any())).thenThrow(new CreateResourceTypeException("error"));
+
+        ResourceReference reference =
+            new ResourceReference("http://localhost:8080/xwiki/bin/view/A/B", ResourceType.URL);
+        ResourceReference normalizedReference = this.mocker.getComponentUnderTest().normalize(reference);
+
+        assertEquals("http://localhost:8080/xwiki/bin/view/A/B", normalizedReference.getReference());
     }
 }

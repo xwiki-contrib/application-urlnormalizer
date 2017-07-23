@@ -49,6 +49,8 @@
     </developer>
   </developers>
   <properties>
+    <xwiki.jacoco.instructionRatio>0.61</xwiki.jacoco.instructionRatio>
+    <xwiki.extension.category>api</xwiki.extension.category>
     <xwiki.issueManagement.system>jira</xwiki.issueManagement.system>
     <xwiki.issueManagement.url>https://jira.xwiki.org/browse/URLNORMALZ</xwiki.issueManagement.url>
   </properties>
