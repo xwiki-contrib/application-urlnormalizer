@@ -28,7 +28,7 @@
     <version>8.4-8</version>
   </parent>
   <artifactId>listener-urlnormalizer</artifactId>
-  <version>1.1-SNAPSHOT</version>
+  <version>1.1</version>
   <name>Wiki Link URL Normalizer</name>
   <packaging>jar</packaging>
   <description>Convert local URLs into wiki links</description>
@@ -36,7 +36,7 @@
     <connection>scm:git:git://github.com/xwiki-contrib/listener-urlnormalizer.git</connection>
     <developerConnection>scm:git:git@github.com:xwiki-contrib/listener-urlnormalizer.git</developerConnection>
     <url>https://github.com/xwiki-contrib/listener-urlnormalizer</url>
-    <tag>HEAD</tag>
+    <tag>listener-urlnormalizer-1.1</tag>
   </scm>
   <developers>
     <developer>
