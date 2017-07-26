@@ -32,14 +32,12 @@ import org.xwiki.bridge.event.DocumentUpdatingEvent;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.component.manager.ComponentLookupException;
 import org.xwiki.component.manager.ComponentManager;
-import org.xwiki.contrib.urlnormalizer.ResourceReferenceNormalizer;
 import org.xwiki.observation.AbstractEventListener;
 import org.xwiki.observation.event.Event;
 import org.xwiki.rendering.block.Block;
 import org.xwiki.rendering.block.LinkBlock;
 import org.xwiki.rendering.block.XDOM;
 import org.xwiki.rendering.block.match.ClassBlockMatcher;
-import org.xwiki.rendering.listener.reference.ResourceReference;
 import org.xwiki.rendering.parser.ParseException;
 import org.xwiki.rendering.parser.Parser;
 import org.xwiki.rendering.renderer.BlockRenderer;
@@ -69,7 +67,7 @@ public class URLNormalizerListener extends AbstractEventListener
     public static final String NAME = "URLNormalizer";
 
     @Inject
-    private ResourceReferenceNormalizer resourceReferenceNormalizer;
+    private LinkBlockNormalizer linkBlockNormalizer;
 
     @Inject
     private ComponentManager componentManager;
@@ -151,7 +149,7 @@ public class URLNormalizerListener extends AbstractEventListener
                         Block.Axes.DESCENDANT_OR_SELF);
 
                 if (linkBlocks.size() > 0) {
-                    normalizeLinkBlocks(linkBlocks);
+                    linkBlockNormalizer.normalizeLinkBlocks(linkBlocks);
 
                     document.setContent(xdom);
                 }
@@ -159,24 +157,6 @@ public class URLNormalizerListener extends AbstractEventListener
                 logger.warn("Unable to normalize URLs for document [{}]. Root error [{}]", document.getTitle(),
                     ExceptionUtils.getRootCauseMessage(e));
             }
-        }
-    }
-
-    /**
-     * Update the given list of link blocks with normalized URLs.
-     * @param linkBlocks a list of URL (link) blocks
-     */
-    private void normalizeLinkBlocks(List<LinkBlock> linkBlocks)
-    {
-        for (LinkBlock linkBlock : linkBlocks) {
-            ResourceReference newReference = resourceReferenceNormalizer.normalize(linkBlock.getReference());
-
-            // Create a new LinkBlock
-            LinkBlock newLinkBlock = new LinkBlock(linkBlock.getChildren(), newReference,
-                    linkBlock.isFreeStandingURI(), linkBlock.getParameters());
-
-            // Replace the previous LinkBlock in the XDOM
-            linkBlock.getParent().replaceChild(newLinkBlock, linkBlock);
         }
     }
 
@@ -201,7 +181,7 @@ public class URLNormalizerListener extends AbstractEventListener
                     Block.Axes.DESCENDANT_OR_SELF);
 
             if (linkBlocks.size() > 0) {
-                normalizeLinkBlocks(linkBlocks);
+                linkBlockNormalizer.normalizeLinkBlocks(linkBlocks);
 
                 WikiPrinter wikiPrinter = new DefaultWikiPrinter();
                 blockRenderer.render(xdom, wikiPrinter);
