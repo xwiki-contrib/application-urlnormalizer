@@ -49,7 +49,7 @@
     </developer>
   </developers>
   <properties>
-    <xwiki.jacoco.instructionRatio>0.65</xwiki.jacoco.instructionRatio>
+    <xwiki.jacoco.instructionRatio>0.67</xwiki.jacoco.instructionRatio>
     <xwiki.extension.category>api</xwiki.extension.category>
     <xwiki.release.jira.skip>false</xwiki.release.jira.skip>
     <xwiki.issueManagement.system>jira</xwiki.issueManagement.system>

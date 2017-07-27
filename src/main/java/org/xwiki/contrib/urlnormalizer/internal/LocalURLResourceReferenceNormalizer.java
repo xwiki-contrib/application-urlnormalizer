@@ -51,7 +51,7 @@ import org.xwiki.wiki.descriptor.WikiDescriptorManager;
  */
 @Component
 @Singleton
-public class DefaultResourceReferenceNormalizer implements ResourceReferenceNormalizer
+public class LocalURLResourceReferenceNormalizer implements ResourceReferenceNormalizer
 {
     @Inject
     private Logger logger;

@@ -51,15 +51,15 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 /**
- * Unit tests for {@link DefaultResourceReferenceNormalizer}.
+ * Unit tests for {@link LocalURLResourceReferenceNormalizer}.
  *
  * @version $Id$
  */
-public class DefaultResourceReferenceNormalizerTest
+public class LocalURLResourceReferenceNormalizerTest
 {
     @Rule
-    public MockitoComponentMockingRule<DefaultResourceReferenceNormalizer> mocker =
-        new MockitoComponentMockingRule<>(DefaultResourceReferenceNormalizer.class);
+    public MockitoComponentMockingRule<LocalURLResourceReferenceNormalizer> mocker =
+        new MockitoComponentMockingRule<>(LocalURLResourceReferenceNormalizer.class);
 
     @Before
     public void setUp() throws Exception
