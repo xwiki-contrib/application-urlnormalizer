@@ -21,6 +21,7 @@ package org.xwiki.contrib.urlnormalizer.internal;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.xwiki.component.util.DefaultParameterizedType;
@@ -38,6 +39,10 @@ import org.xwiki.resource.entity.EntityResourceAction;
 import org.xwiki.resource.entity.EntityResourceReference;
 import org.xwiki.test.mockito.MockitoComponentMockingRule;
 import org.xwiki.url.ExtendedURL;
+import org.xwiki.url.URLConfiguration;
+import org.xwiki.url.internal.standard.StandardURLConfiguration;
+import org.xwiki.wiki.descriptor.WikiDescriptor;
+import org.xwiki.wiki.descriptor.WikiDescriptorManager;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
@@ -45,14 +50,19 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+/**
+ * Unit tests for {@link DefaultResourceReferenceNormalizer}.
+ *
+ * @version $Id$
+ */
 public class DefaultResourceReferenceNormalizerTest
 {
     @Rule
     public MockitoComponentMockingRule<DefaultResourceReferenceNormalizer> mocker =
         new MockitoComponentMockingRule<>(DefaultResourceReferenceNormalizer.class);
 
-    @Test
-    public void normalizeWhenURLPointsToWikiLink() throws Exception
+    @Before
+    public void setUp() throws Exception
     {
         Container container = this.mocker.getInstance(Container.class);
         ServletRequest request = mock(ServletRequest.class);
@@ -61,6 +71,20 @@ public class DefaultResourceReferenceNormalizerTest
         when(request.getHttpServletRequest()).thenReturn(httpRequest);
         when(httpRequest.getContextPath()).thenReturn("xwiki");
 
+        URLConfiguration urlConfiguration = this.mocker.getInstance(URLConfiguration.class);
+        when(urlConfiguration.getURLFormatId()).thenReturn("standard");
+
+        StandardURLConfiguration standardURLConfiguration = this.mocker.getInstance(StandardURLConfiguration.class);
+        when(standardURLConfiguration.isPathBasedMultiWiki()).thenReturn(false);
+
+        WikiDescriptorManager wikiDescriptorManager = this.mocker.getInstance(WikiDescriptorManager.class);
+        WikiDescriptor wikiDescriptor = mock(WikiDescriptor.class);
+        when(wikiDescriptorManager.getByAlias("my.some.domain")).thenReturn(wikiDescriptor);
+    }
+
+    @Test
+    public void normalizeWhenURLPointsToWikiLink() throws Exception
+    {
         ResourceTypeResolver<ExtendedURL> typeResolver = this.mocker.getInstance(
             new DefaultParameterizedType(null, ResourceTypeResolver.class, ExtendedURL.class));
         org.xwiki.resource.ResourceType type = new org.xwiki.resource.ResourceType("entity");
@@ -77,7 +101,7 @@ public class DefaultResourceReferenceNormalizerTest
         when(serializer.serialize(entityReference)).thenReturn("A.B");
 
         ResourceReference reference =
-            new ResourceReference("http://localhost:8080/xwiki/bin/view/A/B", ResourceType.URL);
+            new ResourceReference("http://my.some.domain/xwiki/bin/view/A/B", ResourceType.URL);
         ResourceReference normalizedReference = this.mocker.getComponentUnderTest().normalize(reference);
 
         assertEquals("A.B", normalizedReference.getReference());
@@ -86,21 +110,14 @@ public class DefaultResourceReferenceNormalizerTest
     @Test
     public void normalizeWhenUnsupportedResourceType() throws Exception
     {
-        Container container = this.mocker.getInstance(Container.class);
-        ServletRequest request = mock(ServletRequest.class);
-        when(container.getRequest()).thenReturn(request);
-        HttpServletRequest httpRequest = mock(HttpServletRequest.class);
-        when(request.getHttpServletRequest()).thenReturn(httpRequest);
-        when(httpRequest.getContextPath()).thenReturn("xwiki");
-
         ResourceTypeResolver<ExtendedURL> typeResolver = this.mocker.getInstance(
             new DefaultParameterizedType(null, ResourceTypeResolver.class, ExtendedURL.class));
         when(typeResolver.resolve(any(ExtendedURL.class), any())).thenThrow(new CreateResourceTypeException("error"));
 
         ResourceReference reference =
-            new ResourceReference("http://localhost:8080/xwiki/bin/view/A/B", ResourceType.URL);
+            new ResourceReference("http://my.some.domain/xwiki/bin/view/A/B", ResourceType.URL);
         ResourceReference normalizedReference = this.mocker.getComponentUnderTest().normalize(reference);
 
-        assertEquals("http://localhost:8080/xwiki/bin/view/A/B", normalizedReference.getReference());
+        assertEquals("http://my.some.domain/xwiki/bin/view/A/B", normalizedReference.getReference());
     }
 }

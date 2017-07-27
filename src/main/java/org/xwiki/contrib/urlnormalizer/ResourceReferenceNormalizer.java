@@ -21,14 +21,17 @@ package org.xwiki.contrib.urlnormalizer;
 
 import org.xwiki.component.annotation.Role;
 import org.xwiki.rendering.listener.reference.ResourceReference;
+import org.xwiki.stability.Unstable;
 
 /**
  * Normalize a {@link ResourceReference} by checking if it is a URL pointing to a wiki link and if so transform it
  * into a Document Resource Reference.
  *
  * @version $Id$
+ * @since 1.0
  */
 @Role
+@Unstable
 public interface ResourceReferenceNormalizer
 {
     /**

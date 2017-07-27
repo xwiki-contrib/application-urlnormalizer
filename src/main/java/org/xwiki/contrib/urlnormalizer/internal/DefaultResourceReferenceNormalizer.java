@@ -39,6 +39,9 @@ import org.xwiki.resource.ResourceReferenceResolver;
 import org.xwiki.resource.ResourceTypeResolver;
 import org.xwiki.resource.entity.EntityResourceReference;
 import org.xwiki.url.ExtendedURL;
+import org.xwiki.url.URLConfiguration;
+import org.xwiki.url.internal.standard.StandardURLConfiguration;
+import org.xwiki.wiki.descriptor.WikiDescriptorManager;
 
 /**
  * This is the default implementation of {@link ResourceReferenceNormalizer}.
@@ -66,6 +69,15 @@ public class DefaultResourceReferenceNormalizer implements ResourceReferenceNorm
     @Named("compactwiki")
     private EntityReferenceSerializer<String> serializer;
 
+    @Inject
+    private WikiDescriptorManager wikiDescriptorManager;
+
+    @Inject
+    private URLConfiguration urlConfiguration;
+
+    @Inject
+    private StandardURLConfiguration standardURLConfiguration;
+
     @Override
     public ResourceReference normalize(ResourceReference reference)
     {
@@ -79,14 +91,8 @@ public class DefaultResourceReferenceNormalizer implements ResourceReferenceNorm
                     ServletRequest servletRequest = (ServletRequest) this.container.getRequest();
                     ExtendedURL extendedURL = new ExtendedURL(new URL(reference.getReference()),
                         servletRequest.getHttpServletRequest().getContextPath());
-                    org.xwiki.resource.ResourceType type =
-                        this.typeResolver.resolve(extendedURL, Collections.emptyMap());
-                    if (type.getId().equals("entity") || type.getId().equals("wiki")) {
-                        EntityResourceReference err =
-                            (EntityResourceReference) this.resolver.resolve(extendedURL, type, Collections.emptyMap());
-                        // At this point we're sure that the URL is pointing to a wiki link
-                        normalizedReference = new ResourceReference(this.serializer.serialize(err.getEntityReference()),
-                            ResourceType.DOCUMENT);
+                    if (isLocalURL(extendedURL)) {
+                        normalizedReference = resolveReference(extendedURL, reference);
                     }
                 }
             }
@@ -97,5 +103,48 @@ public class DefaultResourceReferenceNormalizer implements ResourceReferenceNorm
         }
 
         return normalizedReference;
+    }
+
+    private ResourceReference resolveReference(ExtendedURL extendedURL, ResourceReference originalReference)
+        throws Exception
+    {
+        ResourceReference normalizedReference = originalReference;
+        org.xwiki.resource.ResourceType type =
+            this.typeResolver.resolve(extendedURL, Collections.emptyMap());
+        if (type.getId().equals("entity") || type.getId().equals("wiki")) {
+            EntityResourceReference err =
+                (EntityResourceReference) this.resolver.resolve(extendedURL, type, Collections.emptyMap());
+            // At this point we're sure that the URL is pointing to a wiki link
+            normalizedReference = new ResourceReference(this.serializer.serialize(err.getEntityReference()),
+                ResourceType.DOCUMENT);
+        }
+        return normalizedReference;
+    }
+
+    private boolean isLocalURL(ExtendedURL extendedURL) throws Exception
+    {
+        boolean isLocal = false;
+
+        // Verify that the URL points to a local URL by checking its domain.
+        // TODO: Add a new API to check if a URL is a valid local URL in the URL module in the future
+        // Note: ATM we only support the "Standard" URL scheme...
+        if (this.urlConfiguration.getURLFormatId().equals("standard")) {
+            String wikiAlias;
+            if (this.standardURLConfiguration.isPathBasedMultiWiki()) {
+                if (this.wikiDescriptorManager.getMainWikiId().equals(this.wikiDescriptorManager.getCurrentWikiId())) {
+                    // Fall back to domain base in this case
+                    wikiAlias = extendedURL.getWrappedURL().getHost();
+                } else {
+                    // The second segment is the name of the wiki.
+                    wikiAlias = extendedURL.getSegments().get(1);
+                }
+            } else {
+                wikiAlias = extendedURL.getWrappedURL().getHost();
+            }
+            if (this.wikiDescriptorManager.getByAlias(wikiAlias) != null) {
+                isLocal = true;
+            }
+        }
+        return isLocal;
     }
 }
