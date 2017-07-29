@@ -56,5 +56,6 @@
   </properties>
   <modules>
     <module>listener-urlnormalizer-api</module>
+    <module>listener-urlnormalizer-test</module>
   </modules>
 </project>
