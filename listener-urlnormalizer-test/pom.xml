@@ -50,18 +50,15 @@
       <scope>runtime</scope>
     </dependency>
     <dependency>
-      <!-- Jetty throws an exception if it can't find the root web app -->
-      <groupId>org.xwiki.platform</groupId>
-      <artifactId>xwiki-platform-tool-rootwebapp</artifactId>
-      <version>${platform.version}</version>
-      <type>war</type>
-      <scope>runtime</scope>
-    </dependency>
-    <dependency>
       <groupId>org.xwiki.platform</groupId>
       <artifactId>xwiki-platform-test-ui</artifactId>
       <version>${platform.version}</version>
       <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.xwiki.platform</groupId>
+      <artifactId>xwiki-platform-user-profile-test-pageobjects</artifactId>
+      <version>${platform.version}</version>
     </dependency>
 
     <!-- Make sure we have the Logback SLF4J binding for client side logging for our tests and make sure other logging

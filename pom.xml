@@ -56,6 +56,13 @@
   </properties>
   <modules>
     <module>listener-urlnormalizer-api</module>
-    <module>listener-urlnormalizer-test</module>
   </modules>
+  <profiles>
+    <profile>
+      <id>integration-tests</id>
+      <modules>
+        <module>listener-urlnormalizer-test</module>
+      </modules>
+    </profile>
+  </profiles>
 </project>

@@ -24,6 +24,8 @@ import org.junit.Test;
 import org.xwiki.test.ui.AbstractTest;
 import org.xwiki.test.ui.po.ViewPage;
 import org.xwiki.test.ui.po.editor.WikiEditPage;
+import org.xwiki.user.test.po.PreferencesEditPage;
+import org.xwiki.user.test.po.ProfileUserProfilePage;
 
 import static org.junit.Assert.assertEquals;
 
@@ -44,6 +46,9 @@ public class URLNormalizerTest extends AbstractTest
     @Before
     public void cleanUpPages() throws Exception
     {
+        getUtil().loginAsAdmin();
+        getUtil().createUserAndLogin(getTestClassName(), "password", "usertype", "Advanced");
+
         getUtil().deletePage(getTestClassName(), "Main");
     }
 
@@ -53,29 +58,28 @@ public class URLNormalizerTest extends AbstractTest
         /**
          * We want the test to be as fast as possible, therefore, we’ll test every link combination in one single page.
          */
-
         StringBuilder builder = new StringBuilder();
         StringBuilder expectedResultBuilder = new StringBuilder();
 
         // Test for a simple copy-pasted external URL
         builder.append(String.format("%s\n", ABSOLUTE_EXTERNAL_URL));
-        expectedResultBuilder.append(String.format("%s\n", ABSOLUTE_EXTERNAL_URL));
+        expectedResultBuilder.append(String.format("%s ", ABSOLUTE_EXTERNAL_URL));
 
         // Test for a simple copy-pasted internal URL
         builder.append(String.format("%s\n", ABSOLUTE_INTERNAL_URL));
-        expectedResultBuilder.append(String.format("[[%s>>doc:Main.WebHome]]\n", ESCAPED_ABSOLUTE_INTERNAL_URL));
+        expectedResultBuilder.append(String.format("[[%s>>doc:Main.WebHome]] ", ESCAPED_ABSOLUTE_INTERNAL_URL));
 
         // Test for a wiki link with an external URL
         builder.append(String.format("[[example.org>>%s]]\n", ABSOLUTE_EXTERNAL_URL));
-        expectedResultBuilder.append(String.format("[[example.org>>%s]]\n", ABSOLUTE_EXTERNAL_URL));
+        expectedResultBuilder.append(String.format("[[example.org>>%s]] ", ABSOLUTE_EXTERNAL_URL));
 
         // Test for a wiki link with an internal URL
         builder.append(String.format("[[Main page>>%s]]\n", ABSOLUTE_INTERNAL_URL));
-        expectedResultBuilder.append("[[Main page>>doc:Main.WebHome]]\n");
+        expectedResultBuilder.append("[[Main page>>doc:Main.WebHome]] ");
 
         // Test for a classic wiki link
         builder.append("[[Main page>>doc:Main.WebHome]]\n");
-        expectedResultBuilder.append("[[Main page>>doc:Main.WebHome]]\n");
+        expectedResultBuilder.append("[[Main page>>doc:Main.WebHome]]");
 
         String content = builder.toString();
         String expectedContent = expectedResultBuilder.toString();
