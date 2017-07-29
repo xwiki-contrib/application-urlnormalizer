@@ -24,8 +24,6 @@ import org.junit.Test;
 import org.xwiki.test.ui.AbstractTest;
 import org.xwiki.test.ui.po.ViewPage;
 import org.xwiki.test.ui.po.editor.WikiEditPage;
-import org.xwiki.user.test.po.PreferencesEditPage;
-import org.xwiki.user.test.po.ProfileUserProfilePage;
 
 import static org.junit.Assert.assertEquals;
 
@@ -37,19 +35,30 @@ import static org.junit.Assert.assertEquals;
  */
 public class URLNormalizerTest extends AbstractTest
 {
-    private static final String ABSOLUTE_INTERNAL_URL = "http://localhost:8080/xwiki/bin/view/Main";
+    private String absoluteInternalUrl;
 
-    private static final String ESCAPED_ABSOLUTE_INTERNAL_URL = "http:~~/~~/localhost:8080/xwiki/bin/view/Main";
+    private String escapedAbsoluteInternalUrl;
 
-    private static final String ABSOLUTE_EXTERNAL_URL = "http://example.org/some/other/random/link";
+    private String absoluteExternalUrl;
 
     @Before
-    public void cleanUpPages() throws Exception
+    public void setUp() throws Exception
     {
         getUtil().loginAsAdmin();
         getUtil().createUserAndLogin(getTestClassName(), "password", "usertype", "Advanced");
 
         getUtil().deletePage(getTestClassName(), "Main");
+    }
+
+    @Before
+    public void generateURLs() throws Exception
+    {
+        absoluteInternalUrl = String.format("%sbin/view/Main", getUtil().getBaseURL());
+
+        escapedAbsoluteInternalUrl = String.format("%sbin/view/Main",
+                getUtil().getBaseURL().replaceAll("://", ":~~/~~/"));
+
+        absoluteExternalUrl = "http://example.org/some/other/random/link";
     }
 
     @Test
@@ -62,19 +71,19 @@ public class URLNormalizerTest extends AbstractTest
         StringBuilder expectedResultBuilder = new StringBuilder();
 
         // Test for a simple copy-pasted external URL
-        builder.append(String.format("%s\n", ABSOLUTE_EXTERNAL_URL));
-        expectedResultBuilder.append(String.format("%s ", ABSOLUTE_EXTERNAL_URL));
+        builder.append(String.format("%s\n", absoluteExternalUrl));
+        expectedResultBuilder.append(String.format("%s ", absoluteExternalUrl));
 
         // Test for a simple copy-pasted internal URL
-        builder.append(String.format("%s\n", ABSOLUTE_INTERNAL_URL));
-        expectedResultBuilder.append(String.format("[[%s>>doc:Main.WebHome]] ", ESCAPED_ABSOLUTE_INTERNAL_URL));
+        builder.append(String.format("%s\n", absoluteInternalUrl));
+        expectedResultBuilder.append(String.format("[[%s>>doc:Main.WebHome]] ", escapedAbsoluteInternalUrl));
 
         // Test for a wiki link with an external URL
-        builder.append(String.format("[[example.org>>%s]]\n", ABSOLUTE_EXTERNAL_URL));
-        expectedResultBuilder.append(String.format("[[example.org>>%s]] ", ABSOLUTE_EXTERNAL_URL));
+        builder.append(String.format("[[example.org>>%s]]\n", absoluteExternalUrl));
+        expectedResultBuilder.append(String.format("[[example.org>>%s]] ", absoluteExternalUrl));
 
         // Test for a wiki link with an internal URL
-        builder.append(String.format("[[Main page>>%s]]\n", ABSOLUTE_INTERNAL_URL));
+        builder.append(String.format("[[Main page>>%s]]\n", absoluteInternalUrl));
         expectedResultBuilder.append("[[Main page>>doc:Main.WebHome]] ");
 
         // Test for a classic wiki link
@@ -84,9 +93,15 @@ public class URLNormalizerTest extends AbstractTest
         String content = builder.toString();
         String expectedContent = expectedResultBuilder.toString();
 
-        ViewPage page = getUtil().createPage(getTestClassName(), "Main", content, "URL Normalizer Tests");
+        ViewPage page = getUtil().createPage(getTestClassName(), "Main", "", "URL Normalizer Tests");
 
         WikiEditPage editPage = page.editWiki();
+
+        editPage.setContent(content);
+        editPage.clickSaveAndView(true);
+
+        // Return to the edit page
+        editPage = (new ViewPage()).editWiki();
 
         assertEquals(expectedContent, editPage.getContent());
     }

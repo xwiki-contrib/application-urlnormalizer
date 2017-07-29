@@ -55,11 +55,6 @@
       <version>${platform.version}</version>
       <scope>test</scope>
     </dependency>
-    <dependency>
-      <groupId>org.xwiki.platform</groupId>
-      <artifactId>xwiki-platform-user-profile-test-pageobjects</artifactId>
-      <version>${platform.version}</version>
-    </dependency>
 
     <!-- Make sure we have the Logback SLF4J binding for client side logging for our tests and make sure other logging
          systems go through SLF4J -->
