@@ -31,7 +31,6 @@
   <version>1.2-SNAPSHOT</version>
   <name>Wiki Link URL Normalizer - API</name>
   <packaging>jar</packaging>
-  <description>API module for the URL normalizer</description>
   <properties>
     <xwiki.extension.features>org.xwiki.contrib:listener-urlnormalizer</xwiki.extension.features>
     <xwiki.extension.name>Wiki Link URL Normalizer</xwiki.extension.name>
