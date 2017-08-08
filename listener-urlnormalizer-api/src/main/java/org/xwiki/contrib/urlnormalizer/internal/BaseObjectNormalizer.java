@@ -25,6 +25,7 @@ import java.util.List;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
+import org.slf4j.Logger;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.rendering.block.Block;
 import org.xwiki.rendering.block.LinkBlock;
@@ -49,6 +50,9 @@ import com.xpn.xwiki.objects.BaseObject;
 public class BaseObjectNormalizer
 {
     @Inject
+    private Logger logger;
+
+    @Inject
     private LinkBlockNormalizer linkBlockNormalizer;
 
     /**
@@ -61,7 +65,8 @@ public class BaseObjectNormalizer
      * @param blockRenderer the renderer to use
      */
     public void normalizeBaseObject(BaseObject baseObject, String propertyName, Parser parser,
-            BlockRenderer blockRenderer) {
+        BlockRenderer blockRenderer)
+    {
         // Get the content of the given XProperty
         String content = baseObject.getLargeStringValue(propertyName);
 
@@ -69,7 +74,7 @@ public class BaseObjectNormalizer
             XDOM xdom = parser.parse(new StringReader(content));
 
             List<LinkBlock> linkBlocks = xdom.getBlocks(new ClassBlockMatcher(LinkBlock.class),
-                    Block.Axes.DESCENDANT_OR_SELF);
+                Block.Axes.DESCENDANT_OR_SELF);
 
             if (linkBlocks.size() > 0) {
                 linkBlockNormalizer.normalizeLinkBlocks(linkBlocks);
@@ -82,7 +87,10 @@ public class BaseObjectNormalizer
                 baseObject.setLargeStringValue(propertyName, normalizedContent);
             }
         } catch (ParseException e) {
-            // The parser for the syntax of the document may no fit the syntax used in a XProperty.
+            // The parser for the syntax of the document may not fit the syntax used in a XProperty.
+            // Since this shouldn't happen we need to log an error. It means there's an important problem
+            this.logger.error("Failed to normalize URLs in TextArea property [{}] in document [{}]",
+                propertyName, baseObject.getDocumentReference().toString(), e);
         }
     }
 }

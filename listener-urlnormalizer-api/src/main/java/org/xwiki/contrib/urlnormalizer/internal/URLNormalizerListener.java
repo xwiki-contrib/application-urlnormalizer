@@ -90,12 +90,18 @@ public class URLNormalizerListener extends AbstractEventListener
         XWikiDocument document = (XWikiDocument) source;
         XWikiContext context = (XWikiContext) data;
 
-        try {
-            normalizeDocumentContent(document);
-            normalizeDocumentXObjects(document, context);
-        } catch (XWikiException | ComponentLookupException e) {
-            logger.warn("Unable to normalize URLs for document [{}]. Root error [{}]", document.getTitle(),
+        // For performance persons, we check early and only perform processing if there's a parser and renderer for the
+        // syntax of the document that was modified as otherwise we won't be able to find links and normalize them.
+        if (componentManager.hasComponent(BlockRenderer.class, document.getSyntax().toIdString())
+            && componentManager.hasComponent(Parser.class, document.getSyntax().toIdString()))
+        {
+            try {
+                normalizeDocumentContent(document);
+                normalizeDocumentXObjects(document, context);
+            } catch (XWikiException | ComponentLookupException e) {
+                logger.warn("Unable to normalize URLs for document [{}]. Root error [{}]", document.getTitle(),
                     ExceptionUtils.getRootCauseMessage(e));
+            }
         }
     }
 
@@ -105,44 +111,33 @@ public class URLNormalizerListener extends AbstractEventListener
      * @param document the document to normalize
      * @param context the current {@link XWikiContext}
      * @throws ComponentLookupException if an error happens while fetching a {@link Parser} or a {@link BlockRenderer}
-     * from the component manager
+     *         from the component manager
      */
     private void normalizeDocumentXObjects(XWikiDocument document, XWikiContext context) throws ComponentLookupException
     {
-        /**
-         * Just as what is done in {@link #normalizeDocumentContent(XWikiDocument)}, we have to check if a
-         * {@link org.xwiki.rendering.parser.Parser} and a {@link BlockRenderer} exist for the given syntax.
-         */
-        if (componentManager.hasComponent(BlockRenderer.class, document.getSyntax().toIdString())
-                && componentManager.hasComponent(Parser.class, document.getSyntax().toIdString())) {
+        // Retrieve the parser and the renderer that should be used in order to normalize XProperty contents
+        Parser parser = componentManager.getInstance(Parser.class, document.getSyntax().toIdString());
+        BlockRenderer blockRenderer = componentManager.getInstance(BlockRenderer.class,
+            document.getSyntax().toIdString());
 
-            // Retrieve the parser and the renderer that should be used in order to normalize XProperty contents
-            Parser parser = componentManager.getInstance(Parser.class, document.getSyntax().toIdString());
-            BlockRenderer blockRenderer = componentManager.getInstance(BlockRenderer.class,
-                    document.getSyntax().toIdString());
+        // Get diffs of the document objects
+        List<List<ObjectDiff>> documentObjectDiff =
+            document.getObjectDiff(document.getOriginalDocument(), document, context);
 
-            // Get last diff of the document objects
-            List<List<ObjectDiff>> documentObjectDiff =
-                    document.getObjectDiff(document.getOriginalDocument(), document, context);
+        // Go through every object that has been modified
+        for (List<ObjectDiff> objectDiffs : documentObjectDiff) {
+            // Go through every property modified
+            for (ObjectDiff objectDiff : objectDiffs) {
+                if (objectDiff.getPropType().equals("TextArea")) {
+                    BaseObject object =
+                        document.getXObject(objectDiff.getXClassReference(), objectDiff.getNumber());
+                    TextAreaClass property = (TextAreaClass) object.getField(objectDiff.getPropName());
 
-            // Go through every object that has been modified
-            for (List<ObjectDiff> objectDiffs : documentObjectDiff) {
-                // Go through every property modified
-                for (ObjectDiff objectDiff : objectDiffs) {
-                    if (objectDiff.getPropType().equals("TextArea")) {
-                        BaseObject object =
-                                document.getXObject(objectDiff.getXClassReference(), objectDiff.getNumber());
-                        TextAreaClass property = (TextAreaClass) object.getField(objectDiff.getPropName());
-
-                        /**
-                         * As {@link TextAreaClass#getContentType()} returns a String (and not directly a
-                         * {@link TextAreaClass.ContentType}), we have no other choice than using
-                         * {@link TextAreaClass.ContentType.WIKI_TEXT.toString()}.
-                         */
-                        if (property.getContentType().equals(TextAreaClass.ContentType.WIKI_TEXT.toString())) {
-                            baseObjectNormalizer.normalizeBaseObject(object, objectDiff.getPropName(),
-                                    parser, blockRenderer);
-                        }
+                    // We only perform normalization if the TextArea contains markup (if it's pure text or velocity
+                    // content we won't know how to parse it anyway!).
+                    if (property.getContentType().equals(TextAreaClass.ContentType.WIKI_TEXT.toString())) {
+                        baseObjectNormalizer.normalizeBaseObject(object, objectDiff.getPropName(),
+                            parser, blockRenderer);
                     }
                 }
             }
@@ -157,21 +152,14 @@ public class URLNormalizerListener extends AbstractEventListener
      */
     private void normalizeDocumentContent(XWikiDocument document) throws XWikiException
     {
-        /**
-         * Ensure that we have a correct renderer for the syntax of the given document. If no renderer
-         * is found, {@link XWikiDocument#setContent(XDOM)} will fail.
-         */
-        if (componentManager.hasComponent(BlockRenderer.class, document.getSyntax().toIdString())) {
-            XDOM xdom = document.getXDOM();
+        XDOM xdom = document.getXDOM();
 
-            List<LinkBlock> linkBlocks = xdom.getBlocks(new ClassBlockMatcher(LinkBlock.class),
-                        Block.Axes.DESCENDANT_OR_SELF);
+        List<LinkBlock> linkBlocks = xdom.getBlocks(new ClassBlockMatcher(LinkBlock.class),
+            Block.Axes.DESCENDANT_OR_SELF);
 
-            if (linkBlocks.size() > 0) {
-                linkBlockNormalizer.normalizeLinkBlocks(linkBlocks);
-
-                document.setContent(xdom);
-            }
+        if (linkBlocks.size() > 0) {
+            linkBlockNormalizer.normalizeLinkBlocks(linkBlocks);
+            document.setContent(xdom);
         }
     }
 }

@@ -48,7 +48,7 @@ public class LinkBlockNormalizer
     /**
      * Update the given list of link blocks with normalized URLs.
      *
-     * @param linkBlocks a list of URL (link) blocks
+     * @param linkBlocks the list of URL (link) blocks which will be updated and normalized
      */
     public void normalizeLinkBlocks(List<LinkBlock> linkBlocks)
     {
@@ -64,16 +64,14 @@ public class LinkBlockNormalizer
             // generate a label that corresponds to the original URL of the link.
             if (!linkBlock.getReference().equals(newReference) && linkBlock.isFreeStandingURI()) {
                 newBlockChildren.add(new WordBlock(linkBlock.getReference().getReference()));
-
                 isFreeStanding = false;
             } else {
                 isFreeStanding = linkBlock.isFreeStandingURI();
             }
 
             // Create a new LinkBlock
-            LinkBlock newLinkBlock = new LinkBlock(newBlockChildren, newReference,
-                    isFreeStanding, linkBlock.getParameters());
-
+            LinkBlock newLinkBlock =
+                new LinkBlock(newBlockChildren, newReference, isFreeStanding, linkBlock.getParameters());
 
             // Replace the previous LinkBlock in the XDOM
             linkBlock.getParent().replaceChild(newLinkBlock, linkBlock);
