@@ -19,7 +19,6 @@
  */
 package org.xwiki.contrib.urlnormalizer.internal;
 
-import java.io.StringReader;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -73,6 +72,8 @@ public class URLNormalizerListenerTest
 
     private LinkBlockNormalizer linkBlockNormalizer;
 
+    private BaseObjectNormalizer baseObjectNormalizer;
+
     // A mock of an XWikiDocument initialized in setUp() that can be used in tests
     private XWikiDocument document;
 
@@ -83,6 +84,8 @@ public class URLNormalizerListenerTest
     public void setUp() throws Exception
     {
         linkBlockNormalizer = mocker.registerMockComponent(LinkBlockNormalizer.class);
+
+        baseObjectNormalizer = mocker.registerMockComponent(BaseObjectNormalizer.class);
 
         componentManager = mocker.registerMockComponent(ComponentManager.class);
         when(componentManager.hasComponent(BlockRenderer.class, Syntax.XWIKI_2_1.toIdString())).thenReturn(true);
@@ -134,11 +137,10 @@ public class URLNormalizerListenerTest
      * @param context a mock of the {@link XWikiContext}
      * @param propType the property type of the XObject ("StaticList", "TextArea", ...)
      * @param property the property that should be pointed by the {@link ObjectDiff}
-     * @param linkBlocks the {@link LinkBlock} to associate to the {@link XDOM} given when a {@link Parser} is used
      * @throws Exception if an error happens
      */
     private void mockDocumentXObject(XWikiDocument document, XWikiContext context, String propType,
-            PropertyClass property, List<LinkBlock> linkBlocks) throws Exception
+            PropertyClass property) throws Exception
     {
         XWikiDocument originalDocument = mock(XWikiDocument.class);
         when(document.getOriginalDocument()).thenReturn(originalDocument);
@@ -160,14 +162,9 @@ public class URLNormalizerListenerTest
         when(diff.getXClassReference()).thenReturn(baseObjectClass);
 
         BaseObject baseObject = mock(BaseObject.class);
-        when(baseObject.getLargeStringValue("Mocked prop name")).thenReturn("Content");
         when(baseObject.getField("Mocked prop name")).thenReturn(property);
 
         when(document.getXObject(baseObjectClass, 0)).thenReturn(baseObject);
-
-        XDOM xdom = mockXDOM(linkBlocks);
-
-        when(parser.parse(any(StringReader.class))).thenReturn(xdom);
 
         when(document.getObjectDiff(originalDocument, document, context)).thenReturn(
                 Collections.singletonList(Collections.singletonList(diff)));
@@ -213,13 +210,12 @@ public class URLNormalizerListenerTest
         TextAreaClass property = mock(TextAreaClass.class);
         when(property.getContentType()).thenReturn("FullyRenderedText");
 
-        List<LinkBlock> linkBlocks = Arrays.asList(mock(LinkBlock.class), mock(LinkBlock.class));
-
-        mockDocumentXObject(document, context, "TextArea", property, linkBlocks);
+        mockDocumentXObject(document, context, "TextArea", property);
 
         mocker.getComponentUnderTest().onEvent(null, document, context);
 
-        verify(linkBlockNormalizer, times(1)).normalizeLinkBlocks(linkBlocks);
+        verify(baseObjectNormalizer, times(1)).normalizeBaseObject(
+                any(BaseObject.class), eq("Mocked prop name"), any(Parser.class), any(BlockRenderer.class));
     }
 
     @Test
@@ -234,11 +230,12 @@ public class URLNormalizerListenerTest
 
         List<LinkBlock> linkBlocks = Arrays.asList(mock(LinkBlock.class), mock(LinkBlock.class));
 
-        mockDocumentXObject(document, context, "StaticList", property, linkBlocks);
+        mockDocumentXObject(document, context, "StaticList", property);
 
         mocker.getComponentUnderTest().onEvent(null, document, context);
 
-        verify(linkBlockNormalizer, times(0)).normalizeLinkBlocks(linkBlocks);
+        verify(baseObjectNormalizer, never()).normalizeBaseObject(
+                any(BaseObject.class), any(String.class), any(Parser.class), any(BlockRenderer.class));
     }
 
     @Test
@@ -254,7 +251,7 @@ public class URLNormalizerListenerTest
 
         List<LinkBlock> linkBlocks = Arrays.asList(mock(LinkBlock.class), mock(LinkBlock.class));
 
-        mockDocumentXObject(document, context, "TextArea", property, linkBlocks);
+        mockDocumentXObject(document, context, "TextArea", property);
 
         mocker.getComponentUnderTest().onEvent(null, document, context);
 
