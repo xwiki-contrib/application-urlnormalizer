@@ -34,6 +34,7 @@
   <description>API module for the URL normalizer</description>
   <properties>
     <xwiki.extension.features>org.xwiki.contrib:listener-urlnormalizer</xwiki.extension.features>
+    <xwiki.extension.name>Wiki Link URL Normalizer</xwiki.extension.name>
     <xwiki.jacoco.instructionRatio>0.86</xwiki.jacoco.instructionRatio>
   </properties>
   <dependencies>
