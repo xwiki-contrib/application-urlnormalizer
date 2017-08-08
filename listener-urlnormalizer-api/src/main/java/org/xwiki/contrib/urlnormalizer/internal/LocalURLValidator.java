@@ -34,11 +34,11 @@ import org.xwiki.wiki.descriptor.WikiDescriptorManager;
 /**
  * Validates if an {@link ExtendedURL} points to a local URL or not.
  *
- * @version $Id$
+ * @version $Id:$
  */
 @Component
 @Singleton
-public class LocalExtendedURLURLValidator implements URLValidator<ExtendedURL>
+public class LocalURLValidator implements URLValidator<ExtendedURL>
 {
     @Inject
     private Logger logger;

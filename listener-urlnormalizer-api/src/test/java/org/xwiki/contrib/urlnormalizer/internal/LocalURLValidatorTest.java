@@ -37,15 +37,15 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 /**
- * Unit tests for {@link LocalExtendedURLURLValidator}.
+ * Unit tests for {@link LocalURLValidator}.
  *
  * @version $Id:$
  */
-public class LocalExtendedURLURLValidatorTest
+public class LocalURLValidatorTest
 {
     @Rule
-    public MockitoComponentMockingRule<LocalExtendedURLURLValidator> mocker =
-        new MockitoComponentMockingRule<>(LocalExtendedURLURLValidator.class);
+    public MockitoComponentMockingRule<LocalURLValidator> mocker =
+        new MockitoComponentMockingRule<>(LocalURLValidator.class);
 
     @Before
     public void setUp() throws Exception

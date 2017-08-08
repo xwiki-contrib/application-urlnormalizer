@@ -71,6 +71,9 @@ public class LocalURLResourceReferenceNormalizer implements ResourceReferenceNor
     @Inject
     private URLValidator<ExtendedURL> localURLValidator;
 
+    @Inject
+    private URLValidator<EntityResourceReference> viewURLValidator;
+
     @Override
     public ResourceReference normalize(ResourceReference reference)
     {
@@ -107,9 +110,12 @@ public class LocalURLResourceReferenceNormalizer implements ResourceReferenceNor
         if (type.getId().equals("entity") || type.getId().equals("wiki")) {
             EntityResourceReference err =
                 (EntityResourceReference) this.resolver.resolve(extendedURL, type, Collections.emptyMap());
-            // At this point we're sure that the URL is pointing to a wiki link
-            normalizedReference = new ResourceReference(this.serializer.serialize(err.getEntityReference()),
-                ResourceType.DOCUMENT);
+            // At this point we're sure that the URL is pointing to a wiki link but we still need to verify that we
+            // point to a view URL since that's the only action we support in wiki links ATM.
+            if (this.viewURLValidator.validate(err)) {
+                normalizedReference = new ResourceReference(this.serializer.serialize(err.getEntityReference()),
+                    ResourceType.DOCUMENT);
+            }
         }
         return normalizedReference;
     }

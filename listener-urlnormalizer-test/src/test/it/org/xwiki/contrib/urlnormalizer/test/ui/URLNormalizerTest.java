@@ -47,7 +47,7 @@ public class URLNormalizerTest extends AbstractTest
         getUtil().loginAsAdmin();
         getUtil().createUserAndLogin(getTestClassName(), "password", "usertype", "Advanced");
 
-        getUtil().deletePage(getTestClassName(), "Main");
+        getUtil().deletePage(getTestClassName(), getTestMethodName());
     }
 
     @Before
@@ -64,45 +64,45 @@ public class URLNormalizerTest extends AbstractTest
     @Test
     public void onDocumentUpdate() throws Exception
     {
-        /**
-         * We want the test to be as fast as possible, therefore, we’ll test every link combination in one single page.
-         */
-        StringBuilder builder = new StringBuilder();
+        // We want the test to be as fast as possible, therefore, we’ll test every link combination in one single page.
+        StringBuilder content = new StringBuilder();
         StringBuilder expectedResultBuilder = new StringBuilder();
 
         // Test for a simple copy-pasted external URL
-        builder.append(String.format("%s\n", absoluteExternalUrl));
+        content.append(String.format("%s\n", absoluteExternalUrl));
         expectedResultBuilder.append(String.format("%s ", absoluteExternalUrl));
 
         // Test for a simple copy-pasted internal URL
-        builder.append(String.format("%s\n", absoluteInternalUrl));
+        content.append(String.format("%s\n", absoluteInternalUrl));
         expectedResultBuilder.append(String.format("[[%s>>doc:Main.WebHome]] ", escapedAbsoluteInternalUrl));
 
         // Test for a wiki link with an external URL
-        builder.append(String.format("[[example.org>>%s]]\n", absoluteExternalUrl));
+        content.append(String.format("[[example.org>>%s]]\n", absoluteExternalUrl));
         expectedResultBuilder.append(String.format("[[example.org>>%s]] ", absoluteExternalUrl));
 
         // Test for a wiki link with an internal URL
-        builder.append(String.format("[[Main page>>%s]]\n", absoluteInternalUrl));
+        content.append(String.format("[[Main page>>%s]]\n", absoluteInternalUrl));
         expectedResultBuilder.append("[[Main page>>doc:Main.WebHome]] ");
 
         // Test for a classic wiki link
-        builder.append("[[Main page>>doc:Main.WebHome]]\n");
-        expectedResultBuilder.append("[[Main page>>doc:Main.WebHome]]");
+        content.append("[[Main page>>doc:Main.WebHome]]\n");
+        expectedResultBuilder.append("[[Main page>>doc:Main.WebHome]] ");
 
-        String content = builder.toString();
-        String expectedContent = expectedResultBuilder.toString();
+        // Test for a non-view wiki link
+        String nonViewWikiLink = String.format("%sbin/edit/Main", getUtil().getBaseURL());
+        content.append(String.format("[[Label>>%s]]\n", nonViewWikiLink));
+        expectedResultBuilder.append(String.format("[[Label>>%s]]", nonViewWikiLink));
 
-        ViewPage page = getUtil().createPage(getTestClassName(), "Main", "", "URL Normalizer Tests");
+        ViewPage page = getUtil().createPage(getTestClassName(), getTestMethodName(), "", "URL Normalizer Tests");
 
         WikiEditPage editPage = page.editWiki();
 
-        editPage.setContent(content);
+        editPage.setContent(content.toString());
         editPage.clickSaveAndView(true);
 
         // Return to the edit page
         editPage = (new ViewPage()).editWiki();
 
-        assertEquals(expectedContent, editPage.getContent());
+        assertEquals(expectedResultBuilder.toString(), editPage.getContent());
     }
 }

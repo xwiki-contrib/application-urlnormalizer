@@ -2,4 +2,5 @@ org.xwiki.contrib.urlnormalizer.internal.BaseObjectNormalizer
 org.xwiki.contrib.urlnormalizer.internal.LocalURLResourceReferenceNormalizer
 org.xwiki.contrib.urlnormalizer.internal.LinkBlockNormalizer
 org.xwiki.contrib.urlnormalizer.internal.URLNormalizerListener
-org.xwiki.contrib.urlnormalizer.internal.LocalExtendedURLURLValidator
+org.xwiki.contrib.urlnormalizer.internal.LocalURLValidator
+org.xwiki.contrib.urlnormalizer.internal.ViewURLValidator
