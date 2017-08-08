@@ -131,11 +131,12 @@ public class URLNormalizerListener extends AbstractEventListener
                 if (objectDiff.getPropType().equals("TextArea")) {
                     BaseObject object =
                         document.getXObject(objectDiff.getXClassReference(), objectDiff.getNumber());
-                    TextAreaClass property = (TextAreaClass) object.getField(objectDiff.getPropName());
+                    TextAreaClass property =
+                        (TextAreaClass) object.getXClass(context).getField(objectDiff.getPropName());
 
                     // We only perform normalization if the TextArea contains markup (if it's pure text or velocity
                     // content we won't know how to parse it anyway!).
-                    if (property.getContentType().equals(TextAreaClass.ContentType.WIKI_TEXT.toString())) {
+                    if (property.getContentType().equalsIgnoreCase(TextAreaClass.ContentType.WIKI_TEXT.toString())) {
                         baseObjectNormalizer.normalizeBaseObject(object, objectDiff.getPropName(),
                             parser, blockRenderer);
                     }

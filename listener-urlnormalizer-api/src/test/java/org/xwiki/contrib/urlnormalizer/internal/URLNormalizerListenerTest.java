@@ -43,6 +43,7 @@ import com.xpn.xwiki.XWikiContext;
 import com.xpn.xwiki.doc.XWikiDocument;
 import com.xpn.xwiki.objects.BaseObject;
 import com.xpn.xwiki.objects.ObjectDiff;
+import com.xpn.xwiki.objects.classes.BaseClass;
 import com.xpn.xwiki.objects.classes.PropertyClass;
 import com.xpn.xwiki.objects.classes.StaticListClass;
 import com.xpn.xwiki.objects.classes.TextAreaClass;
@@ -162,7 +163,9 @@ public class URLNormalizerListenerTest
         when(diff.getXClassReference()).thenReturn(baseObjectClass);
 
         BaseObject baseObject = mock(BaseObject.class);
-        when(baseObject.getField("Mocked prop name")).thenReturn(property);
+        BaseClass baseClass = mock(BaseClass.class);
+        when(baseObject.getXClass(any(XWikiContext.class))).thenReturn(baseClass);
+        when(baseClass.getField("Mocked prop name")).thenReturn(property);
 
         when(document.getXObject(baseObjectClass, 0)).thenReturn(baseObject);
 
@@ -215,7 +218,7 @@ public class URLNormalizerListenerTest
         mocker.getComponentUnderTest().onEvent(null, document, context);
 
         verify(baseObjectNormalizer, times(1)).normalizeBaseObject(
-                any(BaseObject.class), eq("Mocked prop name"), any(Parser.class), any(BlockRenderer.class));
+            any(BaseObject.class), eq("Mocked prop name"), any(Parser.class), any(BlockRenderer.class));
     }
 
     @Test

@@ -21,8 +21,11 @@ package org.xwiki.contrib.urlnormalizer.test.ui;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.openqa.selenium.By;
 import org.xwiki.test.ui.AbstractTest;
 import org.xwiki.test.ui.po.ViewPage;
+import org.xwiki.test.ui.po.editor.ObjectEditPage;
+import org.xwiki.test.ui.po.editor.ObjectEditPane;
 import org.xwiki.test.ui.po.editor.WikiEditPage;
 
 import static org.junit.Assert.assertEquals;
@@ -100,9 +103,18 @@ public class URLNormalizerTest extends AbstractTest
         editPage.setContent(content.toString());
         editPage.clickSaveAndView(true);
 
+        // We add an xproperty to verify that it's also normalized fine
+        getUtil().addObject(getTestClassName(), getTestMethodName(), "XWiki.XWikiComments", "comment",
+            absoluteInternalUrl);
+
         // Return to the edit page
         editPage = (new ViewPage()).editWiki();
-
         assertEquals(expectedResultBuilder.toString(), editPage.getContent());
+        page = editPage.clickCancel();
+
+        ObjectEditPage objectEditPage = page.editObjects();
+        ObjectEditPane objectEditPane = objectEditPage.getObjectsOfClass("XWiki.XWikiComments").get(0);
+        assertEquals(String.format("[[%s>>doc:Main.WebHome]]", escapedAbsoluteInternalUrl),
+            objectEditPane.getFieldValue(By.id("XWiki.XWikiComments_0_comment")));
     }
 }
