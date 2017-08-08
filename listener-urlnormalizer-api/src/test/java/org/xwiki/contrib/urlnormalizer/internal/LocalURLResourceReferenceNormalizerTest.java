@@ -27,6 +27,7 @@ import org.junit.Test;
 import org.xwiki.component.util.DefaultParameterizedType;
 import org.xwiki.container.Container;
 import org.xwiki.container.servlet.ServletRequest;
+import org.xwiki.contrib.urlnormalizer.URLValidator;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.EntityReference;
 import org.xwiki.model.reference.EntityReferenceSerializer;
@@ -39,10 +40,6 @@ import org.xwiki.resource.entity.EntityResourceAction;
 import org.xwiki.resource.entity.EntityResourceReference;
 import org.xwiki.test.mockito.MockitoComponentMockingRule;
 import org.xwiki.url.ExtendedURL;
-import org.xwiki.url.URLConfiguration;
-import org.xwiki.url.internal.standard.StandardURLConfiguration;
-import org.xwiki.wiki.descriptor.WikiDescriptor;
-import org.xwiki.wiki.descriptor.WikiDescriptorManager;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
@@ -70,16 +67,6 @@ public class LocalURLResourceReferenceNormalizerTest
         HttpServletRequest httpRequest = mock(HttpServletRequest.class);
         when(request.getHttpServletRequest()).thenReturn(httpRequest);
         when(httpRequest.getContextPath()).thenReturn("xwiki");
-
-        URLConfiguration urlConfiguration = this.mocker.getInstance(URLConfiguration.class);
-        when(urlConfiguration.getURLFormatId()).thenReturn("standard");
-
-        StandardURLConfiguration standardURLConfiguration = this.mocker.getInstance(StandardURLConfiguration.class);
-        when(standardURLConfiguration.isPathBasedMultiWiki()).thenReturn(false);
-
-        WikiDescriptorManager wikiDescriptorManager = this.mocker.getInstance(WikiDescriptorManager.class);
-        WikiDescriptor wikiDescriptor = mock(WikiDescriptor.class);
-        when(wikiDescriptorManager.getByAlias("my.some.domain")).thenReturn(wikiDescriptor);
     }
 
     @Test
@@ -96,8 +83,12 @@ public class LocalURLResourceReferenceNormalizerTest
         EntityResourceReference err = new EntityResourceReference(entityReference, new EntityResourceAction("view"));
         when(resolver.resolve(any(ExtendedURL.class), eq(type), any())).thenReturn(err);
 
+        URLValidator<ExtendedURL> localURLValidator = this.mocker.getInstance(
+            new DefaultParameterizedType(null, URLValidator.class, ExtendedURL.class));
+        when(localURLValidator.validate(any(ExtendedURL.class))).thenReturn(true);
+
         EntityReferenceSerializer<String> serializer = this.mocker.getInstance(
-            new DefaultParameterizedType(null, EntityReferenceSerializer.class, String.class), "compactwiki");
+        new DefaultParameterizedType(null, EntityReferenceSerializer.class, String.class), "compactwiki");
         when(serializer.serialize(entityReference)).thenReturn("A.B");
 
         ResourceReference reference =

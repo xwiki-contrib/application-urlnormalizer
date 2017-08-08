@@ -32,6 +32,7 @@ import org.xwiki.component.annotation.Component;
 import org.xwiki.container.Container;
 import org.xwiki.container.servlet.ServletRequest;
 import org.xwiki.contrib.urlnormalizer.ResourceReferenceNormalizer;
+import org.xwiki.contrib.urlnormalizer.URLValidator;
 import org.xwiki.model.reference.EntityReferenceSerializer;
 import org.xwiki.rendering.listener.reference.ResourceReference;
 import org.xwiki.rendering.listener.reference.ResourceType;
@@ -39,12 +40,10 @@ import org.xwiki.resource.ResourceReferenceResolver;
 import org.xwiki.resource.ResourceTypeResolver;
 import org.xwiki.resource.entity.EntityResourceReference;
 import org.xwiki.url.ExtendedURL;
-import org.xwiki.url.URLConfiguration;
-import org.xwiki.url.internal.standard.StandardURLConfiguration;
-import org.xwiki.wiki.descriptor.WikiDescriptorManager;
 
 /**
- * This is the default implementation of {@link ResourceReferenceNormalizer}.
+ * Default implementation of {@link ResourceReferenceNormalizer}, supporting only the "standard" URL scheme for the
+ * moment.
  *
  * @version $Id$
  * @since 1.0
@@ -70,13 +69,7 @@ public class LocalURLResourceReferenceNormalizer implements ResourceReferenceNor
     private EntityReferenceSerializer<String> serializer;
 
     @Inject
-    private WikiDescriptorManager wikiDescriptorManager;
-
-    @Inject
-    private URLConfiguration urlConfiguration;
-
-    @Inject
-    private StandardURLConfiguration standardURLConfiguration;
+    private URLValidator<ExtendedURL> localURLValidator;
 
     @Override
     public ResourceReference normalize(ResourceReference reference)
@@ -91,7 +84,7 @@ public class LocalURLResourceReferenceNormalizer implements ResourceReferenceNor
                     ServletRequest servletRequest = (ServletRequest) this.container.getRequest();
                     ExtendedURL extendedURL = new ExtendedURL(new URL(reference.getReference()),
                         servletRequest.getHttpServletRequest().getContextPath());
-                    if (isLocalURL(extendedURL)) {
+                    if (this.localURLValidator.validate(extendedURL)) {
                         normalizedReference = resolveReference(extendedURL, reference);
                     }
                 }
@@ -119,32 +112,5 @@ public class LocalURLResourceReferenceNormalizer implements ResourceReferenceNor
                 ResourceType.DOCUMENT);
         }
         return normalizedReference;
-    }
-
-    private boolean isLocalURL(ExtendedURL extendedURL) throws Exception
-    {
-        boolean isLocal = false;
-
-        // Verify that the URL points to a local URL by checking its domain.
-        // TODO: Add a new API to check if a URL is a valid local URL in the URL module in the future
-        // Note: ATM we only support the "Standard" URL scheme...
-        if (this.urlConfiguration.getURLFormatId().equals("standard")) {
-            String wikiAlias;
-            if (this.standardURLConfiguration.isPathBasedMultiWiki()) {
-                if (this.wikiDescriptorManager.getMainWikiId().equals(this.wikiDescriptorManager.getCurrentWikiId())) {
-                    // Fall back to domain base in this case
-                    wikiAlias = extendedURL.getWrappedURL().getHost();
-                } else {
-                    // The second segment is the name of the wiki.
-                    wikiAlias = extendedURL.getSegments().get(1);
-                }
-            } else {
-                wikiAlias = extendedURL.getWrappedURL().getHost();
-            }
-            if (this.wikiDescriptorManager.getByAlias(wikiAlias) != null) {
-                isLocal = true;
-            }
-        }
-        return isLocal;
     }
 }

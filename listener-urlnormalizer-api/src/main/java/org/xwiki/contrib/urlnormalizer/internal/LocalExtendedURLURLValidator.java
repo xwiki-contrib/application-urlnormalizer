@@ -32,7 +32,7 @@ import org.xwiki.url.internal.standard.StandardURLConfiguration;
 import org.xwiki.wiki.descriptor.WikiDescriptorManager;
 
 /**
- * Validates if a {@link ExtendedURL} points to a local URL or not.
+ * Validates if an {@link ExtendedURL} points to a local URL or not.
  *
  * @version $Id$
  */
