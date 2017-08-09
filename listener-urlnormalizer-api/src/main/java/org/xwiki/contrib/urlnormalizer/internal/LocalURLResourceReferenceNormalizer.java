@@ -21,6 +21,8 @@ package org.xwiki.contrib.urlnormalizer.internal;
 
 import java.net.URL;
 import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -115,6 +117,30 @@ public class LocalURLResourceReferenceNormalizer implements ResourceReferenceNor
             if (this.viewURLValidator.validate(err)) {
                 normalizedReference = new ResourceReference(this.serializer.serialize(err.getEntityReference()),
                     ResourceType.DOCUMENT);
+
+                // Handle query string parameters.
+                //
+                // Any query string parameter in the ExtendedURL will find their ways as parameters in
+                // EntityResourceReference. We need to copy them in the normalized ResourceReference.
+                // Also note that the original ResourceReference could theoretically have existing parameters that we
+                // should keep. However in practice this is not possible since there's no markup syntax for that and
+                // thus we can safely ignore it.
+                for (Map.Entry<String, List<String>> parameter: err.getParameters().entrySet()) {
+                    // Note: EntityResourceReference supports having several parameters with the same name but
+                    // ResourceReference doesn't.
+                    // However since our original input is a ResourceReference, there's no risk of having several
+                    // parameters with the same name and we can safely take the first one!...
+                    normalizedReference.setParameter(parameter.getKey(), parameter.getValue().get(0));
+                }
+
+                // Handle fragments (aka anchors).
+                //
+                // Since fragments are currently not parsed by the ResourceReferenceResolver<ExtendedURL> component,
+                // we're currently simply ignoring normalization in this case.
+                if (extendedURL.getURI().getRawFragment() != null) {
+                    // Abort normalization
+                    normalizedReference = originalReference;
+                }
             }
         }
         return normalizedReference;

@@ -87,6 +87,14 @@ public class URLNormalizerTest extends AbstractTest
         content.append(String.format("[[Main page>>%s]]\n", absoluteInternalUrl));
         expectedResultBuilder.append("[[Main page>>doc:Main.WebHome]] ");
 
+        // Test for a wiki link with an internal URL with a query string
+        content.append(String.format("[[Main page>>%s]]\n", absoluteInternalUrl + "?xpage=xml"));
+        expectedResultBuilder.append("[[Main page>>doc:Main.WebHome||queryString=\"xpage=xml\"]] ");
+
+        // Test that we ignore fragments FTM, see https://jira.xwiki.org/browse/URLNORMALZ-11
+        content.append(String.format("[[Main page>>%s]]\n", absoluteInternalUrl + "#anchor"));
+        expectedResultBuilder.append(String.format("[[Main page>>%s]] ", absoluteInternalUrl + "#anchor"));
+
         // Test for a classic wiki link
         content.append("[[Main page>>doc:Main.WebHome]]\n");
         expectedResultBuilder.append("[[Main page>>doc:Main.WebHome]] ");
