@@ -90,6 +90,8 @@ public class URLNormalizerListener extends AbstractEventListener
         XWikiDocument document = (XWikiDocument) source;
         XWikiContext context = (XWikiContext) data;
 
+        this.logger.debug("Normalizing local URLs for [{}]...", document.getDocumentReference());
+
         // For performance persons, we check early and only perform processing if there's a parser and renderer for the
         // syntax of the document that was modified as otherwise we won't be able to find links and normalize them.
         if (componentManager.hasComponent(BlockRenderer.class, document.getSyntax().toIdString())
