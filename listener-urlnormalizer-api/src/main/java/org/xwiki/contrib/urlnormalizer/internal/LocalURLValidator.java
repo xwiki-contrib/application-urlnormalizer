@@ -79,6 +79,7 @@ public class LocalURLValidator implements URLValidator<ExtendedURL>
                 if (this.wikiDescriptorManager.getByAlias(wikiAlias) != null) {
                     isLocal = true;
                 }
+                this.logger.debug("Wiki descriptor for [{}]: {}", wikiAlias, isLocal);
             }
         } catch (Exception e) {
             // It's not normal to fail here, log a warning
