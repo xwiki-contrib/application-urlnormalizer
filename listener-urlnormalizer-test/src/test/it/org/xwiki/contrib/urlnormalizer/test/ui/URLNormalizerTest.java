@@ -99,6 +99,11 @@ public class URLNormalizerTest extends AbstractTest
         content.append("[[Main page>>doc:Main.WebHome]]\n");
         expectedResultBuilder.append("[[Main page>>doc:Main.WebHome]] ");
 
+        // Test for a download wiki link
+        content.append(String.format("[[Attachment>>%sbin/download/Main/WebHome/image.png]]\n",
+            getUtil().getBaseURL()));
+        expectedResultBuilder.append("[[Attachment>>attach:Main.WebHome@image.png]] ");
+
         // Test for a non-view wiki link
         String nonViewWikiLink = String.format("%sbin/edit/Main", getUtil().getBaseURL());
         content.append(String.format("[[Label>>%s]]\n", nonViewWikiLink));

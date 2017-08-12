@@ -35,6 +35,7 @@ import org.xwiki.container.Container;
 import org.xwiki.container.servlet.ServletRequest;
 import org.xwiki.contrib.urlnormalizer.ResourceReferenceNormalizer;
 import org.xwiki.contrib.urlnormalizer.URLValidator;
+import org.xwiki.model.EntityType;
 import org.xwiki.model.reference.EntityReferenceSerializer;
 import org.xwiki.rendering.listener.reference.ResourceReference;
 import org.xwiki.rendering.listener.reference.ResourceType;
@@ -74,7 +75,7 @@ public class LocalURLResourceReferenceNormalizer implements ResourceReferenceNor
     private URLValidator<ExtendedURL> localURLValidator;
 
     @Inject
-    private URLValidator<EntityResourceReference> viewURLValidator;
+    private URLValidator<EntityResourceReference> actionURLValidator;
 
     @Override
     public ResourceReference normalize(ResourceReference reference)
@@ -116,10 +117,18 @@ public class LocalURLResourceReferenceNormalizer implements ResourceReferenceNor
             EntityResourceReference err =
                 (EntityResourceReference) this.resolver.resolve(extendedURL, type, Collections.emptyMap());
             // At this point we're sure that the URL is pointing to a wiki link but we still need to verify that we
-            // point to a view URL since that's the only action we support in wiki links ATM.
-            if (this.viewURLValidator.validate(err)) {
+            // point to a URL for a supported action (view or download) since wiki links only support some actions ATM.
+            if (this.actionURLValidator.validate(err)) {
+                // We need to handle both Attachment and Document resource types
+                ResourceType referenceResourceType;
+                if (err.getEntityReference().getType().equals(EntityType.ATTACHMENT)) {
+                    referenceResourceType = ResourceType.ATTACHMENT;
+                } else {
+                    referenceResourceType = ResourceType.DOCUMENT;
+                }
+
                 normalizedReference = new ResourceReference(this.serializer.serialize(err.getEntityReference()),
-                    ResourceType.DOCUMENT);
+                    referenceResourceType);
 
                 // Handle query string parameters.
                 //

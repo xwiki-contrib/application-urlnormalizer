@@ -21,6 +21,7 @@ package org.xwiki.contrib.urlnormalizer.internal;
 
 import org.junit.Rule;
 import org.junit.Test;
+import org.xwiki.model.reference.AttachmentReference;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.resource.entity.EntityResourceAction;
 import org.xwiki.resource.entity.EntityResourceReference;
@@ -30,21 +31,30 @@ import static junit.framework.TestCase.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 /**
- * Unit tests for {@link ViewURLValidator}.
+ * Unit tests for {@link SupportedActionURLValidator}.
  *
  * @version $Id:$
  */
-public class ViewURLValidatorTest
+public class SupportedActionURLValidatorTest
 {
     @Rule
-    public MockitoComponentMockingRule<ViewURLValidator> mocker =
-        new MockitoComponentMockingRule<>(ViewURLValidator.class);
+    public MockitoComponentMockingRule<SupportedActionURLValidator> mocker =
+        new MockitoComponentMockingRule<>(SupportedActionURLValidator.class);
 
     @Test
     public void validateWhenViewURL() throws Exception
     {
         EntityResourceReference reference =
             new EntityResourceReference(new DocumentReference("wiki", "space", "page"), EntityResourceAction.VIEW);
+        assertTrue(this.mocker.getComponentUnderTest().validate(reference));
+    }
+
+    @Test
+    public void validateWhenDownloadURL() throws Exception
+    {
+        EntityResourceReference reference = new EntityResourceReference(
+            new AttachmentReference("attachment", new DocumentReference("wiki", "space", "page")),
+            new EntityResourceAction("download"));
         assertTrue(this.mocker.getComponentUnderTest().validate(reference));
     }
 

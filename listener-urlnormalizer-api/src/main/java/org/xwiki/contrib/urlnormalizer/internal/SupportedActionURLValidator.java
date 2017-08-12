@@ -27,17 +27,19 @@ import org.xwiki.resource.entity.EntityResourceAction;
 import org.xwiki.resource.entity.EntityResourceReference;
 
 /**
- * Validates if an {@link EntityResourceReference} points to a view URL or not.
+ * Validates if an {@link EntityResourceReference} points to a URL for a supported action ("view", "download") or not.
  *
  * @version $Id:$
  */
 @Component
 @Singleton
-public class ViewURLValidator implements URLValidator<EntityResourceReference>
+public class SupportedActionURLValidator implements URLValidator<EntityResourceReference>
 {
+    private static final EntityResourceAction DOWNLOAD_ACTION = new EntityResourceAction("download");
+
     @Override
     public boolean validate(EntityResourceReference reference)
     {
-        return reference.getAction().equals(EntityResourceAction.VIEW);
+        return reference.getAction().equals(EntityResourceAction.VIEW) || reference.getAction().equals(DOWNLOAD_ACTION);
     }
 }

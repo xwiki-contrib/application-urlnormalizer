@@ -19,7 +19,6 @@
  */
 package org.xwiki.contrib.urlnormalizer.internal;
 
-import java.io.Reader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
