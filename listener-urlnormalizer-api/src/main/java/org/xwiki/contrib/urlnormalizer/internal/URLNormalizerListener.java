@@ -94,14 +94,14 @@ public class URLNormalizerListener extends AbstractEventListener
 
         // For performance persons, we check early and only perform processing if there's a parser and renderer for the
         // syntax of the document that was modified as otherwise we won't be able to find links and normalize them.
-        if (componentManager.hasComponent(BlockRenderer.class, document.getSyntax().toIdString())
-            && componentManager.hasComponent(Parser.class, document.getSyntax().toIdString()))
+        if (this.componentManager.hasComponent(BlockRenderer.class, document.getSyntax().toIdString())
+            && this.componentManager.hasComponent(Parser.class, document.getSyntax().toIdString()))
         {
             try {
                 normalizeDocumentContent(document);
                 normalizeDocumentXObjects(document, context);
             } catch (XWikiException | ComponentLookupException e) {
-                logger.warn("Unable to normalize URLs for document [{}]. Root error [{}]", document.getTitle(),
+                this.logger.warn("Unable to normalize URLs for document [{}]. Root error [{}]", document.getTitle(),
                     ExceptionUtils.getRootCauseMessage(e));
             }
         }
@@ -118,8 +118,8 @@ public class URLNormalizerListener extends AbstractEventListener
     private void normalizeDocumentXObjects(XWikiDocument document, XWikiContext context) throws ComponentLookupException
     {
         // Retrieve the parser and the renderer that should be used in order to normalize XProperty contents
-        Parser parser = componentManager.getInstance(Parser.class, document.getSyntax().toIdString());
-        BlockRenderer blockRenderer = componentManager.getInstance(BlockRenderer.class,
+        Parser parser = this.componentManager.getInstance(Parser.class, document.getSyntax().toIdString());
+        BlockRenderer blockRenderer = this.componentManager.getInstance(BlockRenderer.class,
             document.getSyntax().toIdString());
 
         // Get diffs of the document objects
@@ -139,7 +139,7 @@ public class URLNormalizerListener extends AbstractEventListener
                     // We only perform normalization if the TextArea contains markup (if it's pure text or velocity
                     // content we won't know how to parse it anyway!).
                     if (property.getContentType().equalsIgnoreCase(TextAreaClass.ContentType.WIKI_TEXT.toString())) {
-                        baseObjectNormalizer.normalizeBaseObject(object, objectDiff.getPropName(),
+                        this.baseObjectNormalizer.normalizeBaseObject(object, objectDiff.getPropName(),
                             parser, blockRenderer);
                     }
                 }
@@ -161,7 +161,7 @@ public class URLNormalizerListener extends AbstractEventListener
             Block.Axes.DESCENDANT_OR_SELF);
 
         if (linkBlocks.size() > 0) {
-            linkBlockNormalizer.normalizeLinkBlocks(linkBlocks);
+            this.linkBlockNormalizer.normalizeLinkBlocks(linkBlocks);
             document.setContent(xdom);
         }
     }

@@ -69,7 +69,7 @@ public class LinkBlockNormalizer
             LinkBlock linkBlock = linkBlocks.get(i);
 
             ResourceReference originalReference = linkBlock.getReference();
-            ResourceReference newReference = resourceReferenceNormalizer.normalize(originalReference);
+            ResourceReference newReference = this.resourceReferenceNormalizer.normalize(originalReference);
 
             // If no normalization happened then don't perform any change to the LinkBlock!
             if (newReference == linkBlock.getReference()) {

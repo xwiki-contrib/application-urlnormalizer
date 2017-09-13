@@ -77,7 +77,7 @@ public class BaseObjectNormalizer
                 Block.Axes.DESCENDANT_OR_SELF);
 
             if (linkBlocks.size() > 0) {
-                linkBlockNormalizer.normalizeLinkBlocks(linkBlocks);
+                this.linkBlockNormalizer.normalizeLinkBlocks(linkBlocks);
 
                 WikiPrinter wikiPrinter = new DefaultWikiPrinter();
                 blockRenderer.render(xdom, wikiPrinter);
