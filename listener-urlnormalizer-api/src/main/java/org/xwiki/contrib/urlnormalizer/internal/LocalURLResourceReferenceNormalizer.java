@@ -100,8 +100,8 @@ public class LocalURLResourceReferenceNormalizer implements ResourceReferenceNor
             // the URL parser we use will generate a CreateResourceReferenceException if the URL to parse is not a
             // local URL. Thus we need to ignore all errors in order to avoid spurious logs for the user.
             // That's why we log it only at debug level.
-            this.logger.debug("Failed to normalize URL into a wiki link. Error [{}]",
-                ExceptionUtils.getRootCauseMessage(e));
+            this.logger.debug("Failed to normalize URL [{}] into a wiki link. Error [{}]",
+                reference.getReference(), ExceptionUtils.getRootCauseMessage(e));
         }
 
         return normalizedReference;
