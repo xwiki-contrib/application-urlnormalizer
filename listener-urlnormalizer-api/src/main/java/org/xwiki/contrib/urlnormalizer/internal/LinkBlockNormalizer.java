@@ -32,6 +32,7 @@ import javax.inject.Singleton;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.message.BasicNameValuePair;
+import org.slf4j.Logger;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.urlnormalizer.ResourceReferenceNormalizer;
 import org.xwiki.rendering.block.Block;
@@ -52,6 +53,9 @@ import org.xwiki.text.StringUtils;
 public class LinkBlockNormalizer
 {
     @Inject
+    private Logger logger;
+
+    @Inject
     private ResourceReferenceNormalizer resourceReferenceNormalizer;
 
     /**
@@ -64,7 +68,8 @@ public class LinkBlockNormalizer
         for (int i = 0; i < linkBlocks.size(); i++) {
             LinkBlock linkBlock = linkBlocks.get(i);
 
-            ResourceReference newReference = resourceReferenceNormalizer.normalize(linkBlock.getReference());
+            ResourceReference originalReference = linkBlock.getReference();
+            ResourceReference newReference = resourceReferenceNormalizer.normalize(originalReference);
 
             // If no normalization happened then don't perform any change to the LinkBlock!
             if (newReference == linkBlock.getReference()) {
@@ -96,6 +101,8 @@ public class LinkBlockNormalizer
                 // Update the list given in parameter
                 linkBlocks.set(i, newLinkBlock);
             }
+
+            this.logger.debug("Normalized link to [{}] into [{}]", originalReference, newReference);
         }
     }
 
