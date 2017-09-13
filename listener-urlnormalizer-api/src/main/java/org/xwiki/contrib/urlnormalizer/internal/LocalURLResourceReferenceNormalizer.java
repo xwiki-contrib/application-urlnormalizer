@@ -80,6 +80,8 @@ public class LocalURLResourceReferenceNormalizer implements ResourceReferenceNor
     @Override
     public ResourceReference normalize(ResourceReference reference)
     {
+        this.logger.debug("Trying to normalize [{}]", reference.getReference());
+
         ResourceReference normalizedReference = reference;
         try {
             if (reference.getType().equals(ResourceType.URL)) {
