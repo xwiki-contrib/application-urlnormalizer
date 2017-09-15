@@ -36,7 +36,21 @@ import org.xwiki.rendering.block.match.ClassBlockMatcher;
  */
 public class MarkupContainingMacroBlockMatcher extends ClassBlockMatcher
 {
-    private static final List<String> SUPPORTED_MACRO = Arrays.asList("message", "warning", "info", "error");
+    /**
+     * Names of macros that support wiki markup and the markup syntax is that of the current document.
+     */
+    private static final List<String> SUPPORTED_MACRO = Arrays.asList(
+        "message",
+        "warning",
+        "info",
+        "error",
+        "success",
+        "cache",
+        "context",
+        "box",
+        "comment",
+        "container",
+        "todo");
 
     /**
      * Default constructor.
