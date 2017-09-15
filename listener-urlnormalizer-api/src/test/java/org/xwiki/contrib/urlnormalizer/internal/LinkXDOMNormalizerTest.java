@@ -32,26 +32,28 @@ import org.xwiki.contrib.urlnormalizer.ResourceReferenceNormalizer;
 import org.xwiki.rendering.block.Block;
 import org.xwiki.rendering.block.LinkBlock;
 import org.xwiki.rendering.block.ParagraphBlock;
+import org.xwiki.rendering.block.XDOM;
 import org.xwiki.rendering.listener.reference.ResourceReference;
 import org.xwiki.rendering.listener.reference.ResourceType;
 import org.xwiki.test.mockito.MockitoComponentMockingRule;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 /**
- * Unit tests for {@link LinkBlockNormalizer}.
+ * Unit tests for {@link LinkXDOMNormalizer}.
  *
- * @since 1.1
+ * @since 1.3
  * @version $Id$
  */
-public class LinkBlockNormalizerTest
+public class LinkXDOMNormalizerTest
 {
     @Rule
-    public final MockitoComponentMockingRule<LinkBlockNormalizer> mocker =
-            new MockitoComponentMockingRule<>(LinkBlockNormalizer.class);
+    public final MockitoComponentMockingRule<LinkXDOMNormalizer> mocker =
+            new MockitoComponentMockingRule<>(LinkXDOMNormalizer.class);
 
     private ResourceReferenceNormalizer resourceReferenceNormalizer;
 
@@ -102,21 +104,25 @@ public class LinkBlockNormalizerTest
     @Test
     public void normalizeLinkBlocksWithOneExternalLink() throws Exception
     {
-        List<LinkBlock> linkBlocks = mockLinkBlocks(Arrays.asList(externalLinkReference), Collections.emptyMap());
+        XDOM xdom = new XDOM(mockLinkBlocks(Arrays.asList(externalLinkReference), Collections.emptyMap()));
 
-        mocker.getComponentUnderTest().normalizeLinkBlocks(linkBlocks);
+        boolean modified = mocker.getComponentUnderTest().normalize(xdom, null, null);
 
-        assertNotEquals(externalLinkReference, linkBlocks.get(0).getReference());
+        assertTrue(modified);
+        assertTrue(xdom.getChildren().get(0) instanceof LinkBlock);
+        assertNotEquals(externalLinkReference, ((LinkBlock) xdom.getChildren().get(0)).getReference());
     }
 
     @Test
     public void normalizeLinkBlocksWithOneInternalLink() throws Exception
     {
-        List<LinkBlock> linkBlocks = mockLinkBlocks(Arrays.asList(internalLinkReference), Collections.emptyMap());
+        XDOM xdom = new XDOM(mockLinkBlocks(Arrays.asList(internalLinkReference), Collections.emptyMap()));
 
-        mocker.getComponentUnderTest().normalizeLinkBlocks(linkBlocks);
+        boolean modified = mocker.getComponentUnderTest().normalize(xdom, null, null);
 
-        assertEquals(internalLinkReference, linkBlocks.get(0).getReference());
+        assertTrue(modified);
+        assertTrue(xdom.getChildren().get(0) instanceof LinkBlock);
+        assertEquals(internalLinkReference, ((LinkBlock) xdom.getChildren().get(0)).getReference());
     }
 
     @Test
@@ -129,14 +135,15 @@ public class LinkBlockNormalizerTest
 
         when(resourceReferenceNormalizer.normalize(reference)).thenReturn(normalizedReference);
 
-        List<LinkBlock> linkBlocks =
-            mockLinkBlocks(Arrays.asList(reference), Collections.singletonMap("queryString", "c=d"));
+        XDOM xdom = new XDOM(mockLinkBlocks(Arrays.asList(reference), Collections.singletonMap("queryString", "c=d")));
 
-        mocker.getComponentUnderTest().normalizeLinkBlocks(linkBlocks);
+        boolean modified = mocker.getComponentUnderTest().normalize(xdom, null, null);
 
-        assertEquals("normalized", linkBlocks.get(0).getReference().getReference());
-        assertEquals(1, linkBlocks.get(0).getParameters().size());
-        assertEquals("c=d&a=b", linkBlocks.get(0).getParameter("queryString"));
+        assertTrue(modified);
+        assertTrue(xdom.getChildren().get(0) instanceof LinkBlock);
+        assertEquals("normalized", ((LinkBlock) xdom.getChildren().get(0)).getReference().getReference());
+        assertEquals(1, xdom.getChildren().get(0).getParameters().size());
+        assertEquals("c=d&a=b", xdom.getChildren().get(0).getParameter("queryString"));
     }
 
     @Test
@@ -149,14 +156,15 @@ public class LinkBlockNormalizerTest
 
         when(resourceReferenceNormalizer.normalize(reference)).thenReturn(normalizedReference);
 
-        List<LinkBlock> linkBlocks =
-            mockLinkBlocks(Arrays.asList(reference), Collections.singletonMap("queryString", "a=bb"));
+        XDOM xdom = new XDOM(mockLinkBlocks(Arrays.asList(reference), Collections.singletonMap("queryString", "a=bb")));
 
-        mocker.getComponentUnderTest().normalizeLinkBlocks(linkBlocks);
+        boolean modified = mocker.getComponentUnderTest().normalize(xdom, null, null);
 
-        assertEquals("http://some/url?a=b", linkBlocks.get(0).getReference().getReference());
-        assertEquals(1, linkBlocks.get(0).getParameters().size());
-        assertEquals("a=bb", linkBlocks.get(0).getParameter("queryString"));
+        assertTrue(modified);
+        assertTrue(xdom.getChildren().get(0) instanceof LinkBlock);
+        assertEquals("http://some/url?a=b", ((LinkBlock) xdom.getChildren().get(0)).getReference().getReference());
+        assertEquals(1, xdom.getChildren().get(0).getParameters().size());
+        assertEquals("a=bb", xdom.getChildren().get(0).getParameter("queryString"));
     }
 
     @Test
@@ -169,13 +177,14 @@ public class LinkBlockNormalizerTest
 
         when(resourceReferenceNormalizer.normalize(reference)).thenReturn(normalizedReference);
 
-        List<LinkBlock> linkBlocks =
-            mockLinkBlocks(Arrays.asList(reference), Collections.singletonMap("queryString", "a=b"));
+        XDOM xdom = new XDOM(mockLinkBlocks(Arrays.asList(reference), Collections.singletonMap("queryString", "a=b")));
 
-        mocker.getComponentUnderTest().normalizeLinkBlocks(linkBlocks);
+        boolean modified = mocker.getComponentUnderTest().normalize(xdom, null, null);
 
-        assertEquals("normalized", linkBlocks.get(0).getReference().getReference());
-        assertEquals(1, linkBlocks.get(0).getParameters().size());
-        assertEquals("a=b", linkBlocks.get(0).getParameter("queryString"));
+        assertTrue(modified);
+        assertTrue(xdom.getChildren().get(0) instanceof LinkBlock);
+        assertEquals("normalized", ((LinkBlock) xdom.getChildren().get(0)).getReference().getReference());
+        assertEquals(1, xdom.getChildren().get(0).getParameters().size());
+        assertEquals("a=b", xdom.getChildren().get(0).getParameter("queryString"));
     }
 }

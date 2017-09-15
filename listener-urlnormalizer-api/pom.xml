@@ -28,13 +28,12 @@
     <version>1.3-SNAPSHOT</version>
   </parent>
   <artifactId>listener-urlnormalizer-api</artifactId>
-  <version>1.3-SNAPSHOT</version>
   <name>Wiki Link URL Normalizer - API</name>
   <packaging>jar</packaging>
   <properties>
     <xwiki.extension.features>org.xwiki.contrib:listener-urlnormalizer</xwiki.extension.features>
     <xwiki.extension.name>Wiki Link URL Normalizer</xwiki.extension.name>
-    <xwiki.jacoco.instructionRatio>0.90</xwiki.jacoco.instructionRatio>
+    <xwiki.jacoco.instructionRatio>0.91</xwiki.jacoco.instructionRatio>
   </properties>
   <dependencies>
     <dependency>

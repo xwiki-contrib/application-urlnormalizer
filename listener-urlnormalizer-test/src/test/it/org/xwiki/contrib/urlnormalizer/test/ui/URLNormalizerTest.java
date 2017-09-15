@@ -107,7 +107,11 @@ public class URLNormalizerTest extends AbstractTest
         // Test for a non-view wiki link
         String nonViewWikiLink = String.format("%sbin/edit/Main", getUtil().getBaseURL());
         content.append(String.format("[[Label>>%s]]\n", nonViewWikiLink));
-        expectedResultBuilder.append(String.format("[[Label>>%s]]", nonViewWikiLink));
+        expectedResultBuilder.append(String.format("[[Label>>%s]] ", nonViewWikiLink));
+
+        // Test for a wiki link in an info macro
+        content.append(String.format("{{info}}[[Label>>%s]]{{/info}}\n", absoluteInternalUrl));
+        expectedResultBuilder.append("{{info}}[[Label>>doc:Main.WebHome]]{{/info}}");
 
         ViewPage page = getUtil().createPage(getTestClassName(), getTestMethodName(), "", "URL Normalizer Tests");
 

@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import javax.inject.Singleton;
 
 import org.apache.http.NameValuePair;
@@ -38,19 +39,24 @@ import org.xwiki.contrib.urlnormalizer.ResourceReferenceNormalizer;
 import org.xwiki.rendering.block.Block;
 import org.xwiki.rendering.block.LinkBlock;
 import org.xwiki.rendering.block.WordBlock;
+import org.xwiki.rendering.block.XDOM;
+import org.xwiki.rendering.block.match.ClassBlockMatcher;
 import org.xwiki.rendering.listener.reference.DocumentResourceReference;
 import org.xwiki.rendering.listener.reference.ResourceReference;
+import org.xwiki.rendering.parser.Parser;
+import org.xwiki.rendering.renderer.BlockRenderer;
 import org.xwiki.text.StringUtils;
 
 /**
- * Interfaces with a {@link ResourceReferenceNormalizer}.
+ * Transform local links found in the passed XDOM into wiki links.
  *
  * @version $Id$
- * @since 1.1
+ * @since 1.3
  */
-@Component(roles = LinkBlockNormalizer.class)
+@Component
+@Named("link")
 @Singleton
-public class LinkBlockNormalizer
+public class LinkXDOMNormalizer implements XDOMNormalizer
 {
     @Inject
     private Logger logger;
@@ -58,12 +64,26 @@ public class LinkBlockNormalizer
     @Inject
     private ResourceReferenceNormalizer resourceReferenceNormalizer;
 
+    @Override
+    public boolean normalize(XDOM xdom, Parser parser, BlockRenderer blockRenderer)
+    {
+        List<LinkBlock> linkBlocks = xdom.getBlocks(new ClassBlockMatcher(LinkBlock.class),
+            Block.Axes.DESCENDANT_OR_SELF);
+
+        if (linkBlocks.size() > 0) {
+            normalize(linkBlocks);
+            return true;
+        }
+
+        return false;
+    }
+
     /**
      * Update the given list of link blocks with normalized URLs.
      *
      * @param linkBlocks the list of URL (link) blocks which will be updated and normalized
      */
-    public void normalizeLinkBlocks(List<LinkBlock> linkBlocks)
+    private void normalize(List<LinkBlock> linkBlocks)
     {
         for (int i = 0; i < linkBlocks.size(); i++) {
             LinkBlock linkBlock = linkBlocks.get(i);
