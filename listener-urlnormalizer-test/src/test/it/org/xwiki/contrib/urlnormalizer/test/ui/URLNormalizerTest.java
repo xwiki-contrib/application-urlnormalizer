@@ -111,7 +111,11 @@ public class URLNormalizerTest extends AbstractTest
 
         // Test for a wiki link in an info macro
         content.append(String.format("{{info}}[[Label>>%s]]{{/info}}\n", absoluteInternalUrl));
-        expectedResultBuilder.append("{{info}}[[Label>>doc:Main.WebHome]]{{/info}}");
+        expectedResultBuilder.append("{{info}}[[Label>>doc:Main.WebHome]]{{/info}} ");
+
+        // Test for a wiki link in an HTML macro with wiki=true
+        content.append(String.format("\n{{html wiki='true'}}[[Label>>%s]]{{/html}}", absoluteInternalUrl));
+        expectedResultBuilder.append("{{html wiki=\"true\"}} [[Label>>doc:Main.WebHome]] {{/html}}");
 
         ViewPage page = getUtil().createPage(getTestClassName(), getTestMethodName(), "", "URL Normalizer Tests");
 

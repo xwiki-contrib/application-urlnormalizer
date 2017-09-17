@@ -63,6 +63,17 @@ public class MarkupContainingMacroBlockMatcher extends ClassBlockMatcher
     @Override
     public boolean match(Block block)
     {
-        return super.match(block) && SUPPORTED_MACRO.contains(((MacroBlock) block).getId());
+        boolean match = false;
+
+        if (super.match(block)) {
+            MacroBlock macroBlock = (MacroBlock) block;
+            if (SUPPORTED_MACRO.contains(macroBlock.getId())) {
+                match = true;
+            } else if (macroBlock.getId().equals("html") && Boolean.valueOf(macroBlock.getParameter("wiki"))) {
+                match = true;
+            }
+        }
+
+        return match;
     }
 }

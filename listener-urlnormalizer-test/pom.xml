@@ -23,7 +23,7 @@
   <parent>
     <groupId>org.xwiki.contrib</groupId>
     <artifactId>listener-urlnormalizer</artifactId>
-    <version>1.3-SNAPSHOT</version>
+    <version>1.4-SNAPSHOT</version>
   </parent>
   <artifactId>listener-urlnormalizer-test</artifactId>
   <name>Wiki Link URL Normalizer - Functional Tests</name>
@@ -37,13 +37,19 @@
     <dependency>
       <groupId>org.xwiki.contrib</groupId>
       <artifactId>listener-urlnormalizer-api</artifactId>
-      <version>1.3-SNAPSHOT</version>
+      <version>1.4-SNAPSHOT</version>
       <type>jar</type>
     </dependency>
-    <!-- We use the info macro in the test -->
+    <!-- We use the info & html macros in the test -->
     <dependency>
       <groupId>org.xwiki.rendering</groupId>
       <artifactId>xwiki-rendering-macro-message</artifactId>
+      <version>${rendering.version}</version>
+      <type>jar</type>
+    </dependency>
+    <dependency>
+      <groupId>org.xwiki.rendering</groupId>
+      <artifactId>xwiki-rendering-macro-html</artifactId>
       <version>${rendering.version}</version>
       <type>jar</type>
     </dependency>
