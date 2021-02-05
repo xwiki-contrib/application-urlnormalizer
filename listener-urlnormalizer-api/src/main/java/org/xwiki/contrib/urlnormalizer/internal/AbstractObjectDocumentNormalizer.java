@@ -28,7 +28,6 @@ import javax.inject.Provider;
 
 import org.xwiki.contrib.urlnormalizer.DocumentNormalizer;
 import org.xwiki.contrib.urlnormalizer.NormalizationException;
-import org.xwiki.contrib.urlnormalizer.XDOMNormalizer;
 import org.xwiki.rendering.block.XDOM;
 import org.xwiki.rendering.parser.ParseException;
 import org.xwiki.rendering.parser.Parser;

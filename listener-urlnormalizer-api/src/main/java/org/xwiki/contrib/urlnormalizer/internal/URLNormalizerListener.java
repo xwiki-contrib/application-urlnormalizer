@@ -82,7 +82,6 @@ public class URLNormalizerListener extends AbstractEventListener
     public void onEvent(Event event, Object source, Object data)
     {
         XWikiDocument document = (XWikiDocument) source;
-        XWikiContext context = (XWikiContext) data;
 
         this.logger.debug("Normalizing local URLs for [{}]...", document.getDocumentReference());
 

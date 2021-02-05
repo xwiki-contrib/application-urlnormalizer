@@ -36,7 +36,6 @@ import org.apache.http.message.BasicNameValuePair;
 import org.slf4j.Logger;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.urlnormalizer.ResourceReferenceNormalizer;
-import org.xwiki.contrib.urlnormalizer.XDOMNormalizer;
 import org.xwiki.rendering.block.Block;
 import org.xwiki.rendering.block.LinkBlock;
 import org.xwiki.rendering.block.WordBlock;
