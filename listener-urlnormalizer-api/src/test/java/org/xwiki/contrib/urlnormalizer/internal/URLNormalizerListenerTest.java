@@ -29,6 +29,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
+import org.xwiki.contrib.urlnormalizer.XDOMNormalizer;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.rendering.block.Block;
 import org.xwiki.rendering.block.LinkBlock;
@@ -72,8 +73,6 @@ public class URLNormalizerListenerTest
     @Rule
     public final MockitoComponentMockingRule<URLNormalizerListener> mocker =
         new MockitoComponentMockingRule<>(URLNormalizerListener.class);
-
-//    private ComponentManager componentManager;
 
     private XDOMNormalizer linkXDOMNormalizer;
 

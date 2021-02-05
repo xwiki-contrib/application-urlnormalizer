@@ -19,9 +19,6 @@
  */
 package org.xwiki.contrib.urlnormalizer.internal;
 
-import java.io.StringReader;
-import java.util.List;
-
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
@@ -33,21 +30,15 @@ import org.xwiki.bridge.event.DocumentUpdatingEvent;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.component.manager.ComponentLookupException;
 import org.xwiki.component.manager.ComponentManager;
+import org.xwiki.contrib.urlnormalizer.DocumentNormalizer;
+import org.xwiki.contrib.urlnormalizer.NormalizationException;
 import org.xwiki.observation.AbstractEventListener;
 import org.xwiki.observation.event.Event;
-import org.xwiki.rendering.block.XDOM;
-import org.xwiki.rendering.parser.ParseException;
 import org.xwiki.rendering.parser.Parser;
 import org.xwiki.rendering.renderer.BlockRenderer;
-import org.xwiki.rendering.renderer.printer.DefaultWikiPrinter;
-import org.xwiki.rendering.renderer.printer.WikiPrinter;
 
 import com.xpn.xwiki.XWikiContext;
-import com.xpn.xwiki.XWikiException;
 import com.xpn.xwiki.doc.XWikiDocument;
-import com.xpn.xwiki.objects.BaseObject;
-import com.xpn.xwiki.objects.ObjectDiff;
-import com.xpn.xwiki.objects.classes.TextAreaClass;
 
 /**
  * Normalize links found in document content and document XObjects.
@@ -66,18 +57,18 @@ public class URLNormalizerListener extends AbstractEventListener
     static final String NAME = "URLNormalizer";
 
     @Inject
-    @Named("link")
-    private XDOMNormalizer linkXDOMNormalizer;
-
-    @Inject
-    @Named("macro")
-    private XDOMNormalizer macroXDOMNormalizer;
-
-    @Inject
     private ComponentManager componentManager;
 
     @Inject
     private Logger logger;
+
+    @Inject
+    @Named("content")
+    private DocumentNormalizer contentNormalizer;
+
+    @Inject
+    @Named("object/modified")
+    private DocumentNormalizer modifiedObjectNormalizer;
 
     /**
      * Builds a new {@link URLNormalizerListener}.
@@ -107,92 +98,12 @@ public class URLNormalizerListener extends AbstractEventListener
                 BlockRenderer blockRenderer = this.componentManager.getInstance(BlockRenderer.class,
                     document.getSyntax().toIdString());
 
-                normalizeDocumentContent(document, parser, blockRenderer);
-                normalizeDocumentXObjects(document, context, parser, blockRenderer);
-            } catch (XWikiException | ComponentLookupException e) {
+                contentNormalizer.normalize(document, parser, blockRenderer);
+                modifiedObjectNormalizer.normalize(document, parser, blockRenderer);
+            } catch (ComponentLookupException | NormalizationException e) {
                 this.logger.warn("Unable to normalize URLs for document [{}]. Root error [{}]",
                     document.getDocumentReference(), ExceptionUtils.getRootCauseMessage(e));
             }
-        }
-    }
-
-    /**
-     * Normalize the TextArea fields in the last modified XObjects of a given document.
-     *
-     * @param document the document to normalize
-     * @param context the current {@link XWikiContext}
-     * @throws ComponentLookupException if an error happens while fetching a {@link Parser} or a {@link BlockRenderer}
-     *         from the component manager
-     */
-    private void normalizeDocumentXObjects(XWikiDocument document, XWikiContext context, Parser parser,
-        BlockRenderer blockRenderer) throws ComponentLookupException
-    {
-        // Get diffs of the document objects
-        List<List<ObjectDiff>> documentObjectDiff =
-            document.getObjectDiff(document.getOriginalDocument(), document, context);
-
-        // Go through every object that has been modified
-        for (List<ObjectDiff> objectDiffs : documentObjectDiff) {
-            // Go through every property modified
-            for (ObjectDiff objectDiff : objectDiffs) {
-                if (objectDiff.getPropType().equals("TextArea")) {
-                    BaseObject object =
-                        document.getXObject(objectDiff.getXClassReference(), objectDiff.getNumber());
-                    TextAreaClass property =
-                        (TextAreaClass) object.getXClass(context).getField(objectDiff.getPropName());
-
-                    // We only perform normalization if the TextArea contains markup (if it's pure text or velocity
-                    // content we won't know how to parse it anyway!).
-                    if (property.getContentType().equalsIgnoreCase(TextAreaClass.ContentType.WIKI_TEXT.toString())) {
-                        normalizeDocumentXObject(object, objectDiff.getPropName(), parser, blockRenderer);
-                    }
-                }
-            }
-        }
-    }
-
-    private void normalizeDocumentXObject(BaseObject baseObject, String propertyName, Parser parser,
-        BlockRenderer blockRenderer)
-    {
-        // Get the content of the given XProperty
-        String content = baseObject.getLargeStringValue(propertyName);
-
-        try {
-            XDOM xdom = parser.parse(new StringReader(content));
-
-            boolean modified = this.linkXDOMNormalizer.normalize(xdom, parser, blockRenderer);
-            modified |= this.macroXDOMNormalizer.normalize(xdom, parser, blockRenderer);
-
-            if (modified) {
-                WikiPrinter wikiPrinter = new DefaultWikiPrinter();
-                blockRenderer.render(xdom, wikiPrinter);
-                String normalizedContent = wikiPrinter.toString();
-                baseObject.setLargeStringValue(propertyName, normalizedContent);
-            }
-        } catch (ParseException e) {
-            // The parser for the syntax of the document may not fit the syntax used in a XProperty.
-            // Since this shouldn't happen we need to log an error. It means there's an important problem
-            this.logger.error("Failed to normalize URLs in TextArea property [{}] in document [{}]",
-                propertyName, baseObject.getDocumentReference().toString(), e);
-        }
-    }
-
-    /**
-     * Normalize the content of the given document.
-     *
-     * @param document the {@link XWikiDocument} to normalize
-     * @throws XWikiException if the document could not be updated
-     */
-    private void normalizeDocumentContent(XWikiDocument document, Parser parser, BlockRenderer blockRenderer)
-        throws XWikiException
-    {
-        XDOM xdom = document.getXDOM();
-
-        boolean modified = this.linkXDOMNormalizer.normalize(xdom, parser, blockRenderer);
-        modified |= this.macroXDOMNormalizer.normalize(xdom, parser, blockRenderer);
-
-        if (modified) {
-            document.setContent(xdom);
         }
     }
 }

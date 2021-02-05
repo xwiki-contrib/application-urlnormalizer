@@ -20,22 +20,25 @@
 package org.xwiki.contrib.urlnormalizer;
 
 import org.xwiki.component.annotation.Role;
-import org.xwiki.stability.Unstable;
+import org.xwiki.rendering.parser.Parser;
+import org.xwiki.rendering.renderer.BlockRenderer;
+
+import com.xpn.xwiki.doc.XWikiDocument;
 
 /**
- * Validates a URL (what validation is done depends on the implementation).
+ * Provides endpoints for normalizing parts of a document.
  *
- * @param <T> the type representing the URL
  * @version $Id$
- * @since 1.2
+ * @since 1.4
  */
 @Role
-public interface URLValidator<T>
+public interface DocumentNormalizer
 {
     /**
-     * @param urlRepresentation the URL representation
-     *        (e.g. {@link org.xwiki.url.ExtendedURL}, {@link java.net.URL}, etc)
-     * @return true if the passed URL passes the validation or false otherwise
+     * Normalize the given {@link XWikiDocument}
+     *
+     * @param document the document to normalize
+     * @return true if the document has been normalized, false otherwise
      */
-    boolean validate(T urlRepresentation);
+    boolean normalize(XWikiDocument document, Parser parser, BlockRenderer blockRenderer) throws NormalizationException;
 }

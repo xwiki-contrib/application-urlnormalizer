@@ -19,23 +19,15 @@
  */
 package org.xwiki.contrib.urlnormalizer;
 
-import org.xwiki.component.annotation.Role;
-import org.xwiki.stability.Unstable;
-
-/**
- * Validates a URL (what validation is done depends on the implementation).
- *
- * @param <T> the type representing the URL
- * @version $Id$
- * @since 1.2
- */
-@Role
-public interface URLValidator<T>
+public class NormalizationException extends Exception
 {
-    /**
-     * @param urlRepresentation the URL representation
-     *        (e.g. {@link org.xwiki.url.ExtendedURL}, {@link java.net.URL}, etc)
-     * @return true if the passed URL passes the validation or false otherwise
-     */
-    boolean validate(T urlRepresentation);
+    public NormalizationException(String message)
+    {
+        super(message);
+    }
+
+    public NormalizationException(String message, Throwable cause)
+    {
+        super(message, cause);
+    }
 }
