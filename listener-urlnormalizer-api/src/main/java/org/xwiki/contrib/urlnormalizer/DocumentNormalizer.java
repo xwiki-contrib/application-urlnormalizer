@@ -22,6 +22,7 @@ package org.xwiki.contrib.urlnormalizer;
 import org.xwiki.component.annotation.Role;
 import org.xwiki.rendering.parser.Parser;
 import org.xwiki.rendering.renderer.BlockRenderer;
+import org.xwiki.stability.Unstable;
 
 import com.xpn.xwiki.doc.XWikiDocument;
 
@@ -32,13 +33,17 @@ import com.xpn.xwiki.doc.XWikiDocument;
  * @since 1.4
  */
 @Role
+@Unstable
 public interface DocumentNormalizer
 {
     /**
-     * Normalize the given {@link XWikiDocument}
+     * Normalize the given {@link XWikiDocument}.
      *
      * @param document the document to normalize
+     * @param parser the parser to use for parsing the content to be normalized
+     * @param blockRenderer the block renderer that will be used after the normalization
      * @return true if the document has been normalized, false otherwise
+     * @throws NormalizationException if an error happens
      */
     boolean normalize(XWikiDocument document, Parser parser, BlockRenderer blockRenderer) throws NormalizationException;
 }

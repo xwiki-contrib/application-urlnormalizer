@@ -37,7 +37,6 @@ import org.xwiki.observation.event.Event;
 import org.xwiki.rendering.parser.Parser;
 import org.xwiki.rendering.renderer.BlockRenderer;
 
-import com.xpn.xwiki.XWikiContext;
 import com.xpn.xwiki.doc.XWikiDocument;
 
 /**

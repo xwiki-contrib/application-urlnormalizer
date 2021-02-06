@@ -19,13 +19,30 @@
  */
 package org.xwiki.contrib.urlnormalizer;
 
+/**
+ * Defines an exception for normalization errors.
+ *
+ * @version $Id$
+ * @since 1.4
+ */
 public class NormalizationException extends Exception
 {
+    /**
+     * Creates a new {@link NormalizationException}.
+     *
+     * @param message the message
+     */
     public NormalizationException(String message)
     {
         super(message);
     }
 
+    /**
+     * Creates a new {@link NormalizationException}.
+     *
+     * @param message the message
+     * @param cause the cause
+     */
     public NormalizationException(String message, Throwable cause)
     {
         super(message, cause);

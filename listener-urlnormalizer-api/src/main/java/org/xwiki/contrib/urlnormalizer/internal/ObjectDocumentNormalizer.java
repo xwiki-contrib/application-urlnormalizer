@@ -36,7 +36,6 @@ import com.xpn.xwiki.XWikiContext;
 import com.xpn.xwiki.doc.XWikiDocument;
 import com.xpn.xwiki.objects.BaseObject;
 import com.xpn.xwiki.objects.BaseProperty;
-import com.xpn.xwiki.objects.ObjectDiff;
 
 /**
  * Normalizer that will try to normalize every object of the given document.

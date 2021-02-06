@@ -20,7 +20,6 @@
 package org.xwiki.contrib.urlnormalizer;
 
 import org.xwiki.component.annotation.Role;
-import org.xwiki.stability.Unstable;
 
 /**
  * Validates a URL (what validation is done depends on the implementation).

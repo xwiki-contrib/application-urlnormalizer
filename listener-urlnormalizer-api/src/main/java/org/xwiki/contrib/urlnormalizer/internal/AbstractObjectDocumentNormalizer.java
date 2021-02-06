@@ -83,7 +83,7 @@ public abstract class AbstractObjectDocumentNormalizer implements DocumentNormal
     }
 
     /**
-     * Normalize the given XObject property
+     * Normalize the given XObject property.
      *
      * @param baseObject the object to normalize
      * @param propertyName the property that should be normalized
