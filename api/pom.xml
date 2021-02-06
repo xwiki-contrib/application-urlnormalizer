@@ -24,16 +24,18 @@
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>org.xwiki.contrib</groupId>
-    <artifactId>listener-urlnormalizer</artifactId>
+    <artifactId>application-urlnormalizer</artifactId>
     <version>1.4-SNAPSHOT</version>
   </parent>
-  <artifactId>listener-urlnormalizer-api</artifactId>
+  <artifactId>application-urlnormalizer-api</artifactId>
   <name>Wiki Link URL Normalizer - API</name>
-  <packaging>jar</packaging>
   <properties>
-    <xwiki.extension.features>org.xwiki.contrib:listener-urlnormalizer</xwiki.extension.features>
+    <xwiki.extension.features>
+      org.xwiki.contrib:listener-urlnormalizer,
+      org.xwiki.contrib:listener-urlnormalizer-api
+    </xwiki.extension.features>
     <xwiki.extension.name>Wiki Link URL Normalizer</xwiki.extension.name>
-    <xwiki.jacoco.instructionRatio>0.91</xwiki.jacoco.instructionRatio>
+    <xwiki.jacoco.instructionRatio>0.73</xwiki.jacoco.instructionRatio>
   </properties>
   <dependencies>
     <dependency>

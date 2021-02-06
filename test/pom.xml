@@ -22,10 +22,10 @@
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>org.xwiki.contrib</groupId>
-    <artifactId>listener-urlnormalizer</artifactId>
+    <artifactId>application-urlnormalizer</artifactId>
     <version>1.4-SNAPSHOT</version>
   </parent>
-  <artifactId>listener-urlnormalizer-test</artifactId>
+  <artifactId>application-urlnormalizer-test</artifactId>
   <name>Wiki Link URL Normalizer - Functional Tests</name>
   <properties>
     <!-- Functional tests are allowed to output content to the console -->
@@ -36,8 +36,8 @@
     <!-- The API we are testing -->
     <dependency>
       <groupId>org.xwiki.contrib</groupId>
-      <artifactId>listener-urlnormalizer-api</artifactId>
-      <version>1.4-SNAPSHOT</version>
+      <artifactId>application-urlnormalizer-api</artifactId>
+      <version>${project.version}</version>
       <type>jar</type>
     </dependency>
     <!-- We use the info & html macros in the test -->

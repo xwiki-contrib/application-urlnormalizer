@@ -27,15 +27,15 @@
     <artifactId>parent-platform</artifactId>
     <version>8.4-8</version>
   </parent>
-  <artifactId>listener-urlnormalizer</artifactId>
+  <artifactId>application-urlnormalizer</artifactId>
   <version>1.4-SNAPSHOT</version>
   <name>Wiki Link URL Normalizer - Parent POM</name>
   <packaging>pom</packaging>
   <description>Convert local URLs into wiki links</description>
   <scm>
-    <connection>scm:git:git://github.com/xwiki-contrib/listener-urlnormalizer.git</connection>
-    <developerConnection>scm:git:git@github.com:xwiki-contrib/listener-urlnormalizer.git</developerConnection>
-    <url>https://github.com/xwiki-contrib/listener-urlnormalizer</url>
+    <connection>scm:git:git://github.com/xwiki-contrib/application-urlnormalizer.git</connection>
+    <developerConnection>scm:git:git@github.com:xwiki-contrib/application-urlnormalizer.git</developerConnection>
+    <url>https://github.com/xwiki-contrib/application-urlnormalizer</url>
     <tag>HEAD</tag>
   </scm>
   <developers>
@@ -55,13 +55,15 @@
     <xwiki.issueManagement.url>https://jira.xwiki.org/browse/URLNORMALZ</xwiki.issueManagement.url>
   </properties>
   <modules>
-    <module>listener-urlnormalizer-api</module>
+    <module>api</module>
+    <module>script</module>
+    <module>ui</module>
   </modules>
   <profiles>
     <profile>
       <id>integration-tests</id>
       <modules>
-        <module>listener-urlnormalizer-test</module>
+        <module>test</module>
       </modules>
     </profile>
   </profiles>
