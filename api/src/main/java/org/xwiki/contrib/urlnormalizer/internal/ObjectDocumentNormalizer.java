@@ -44,10 +44,15 @@ import com.xpn.xwiki.objects.BaseProperty;
  * @since 1.4
  */
 @Component
-@Named("object")
+@Named(ObjectDocumentNormalizer.HINT)
 @Singleton
 public class ObjectDocumentNormalizer extends AbstractObjectDocumentNormalizer
 {
+    /**
+     * The component hint of this normalizer.
+     */
+    public static final String HINT = "object";
+
     @Override
     public boolean normalize(XWikiDocument document, Parser parser, BlockRenderer blockRenderer)
         throws NormalizationException

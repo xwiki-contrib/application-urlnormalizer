@@ -19,6 +19,8 @@
  */
 package org.xwiki.contrib.urlnormalizer.internal;
 
+import java.util.Arrays;
+
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
@@ -28,14 +30,10 @@ import org.slf4j.Logger;
 import org.xwiki.bridge.event.DocumentCreatingEvent;
 import org.xwiki.bridge.event.DocumentUpdatingEvent;
 import org.xwiki.component.annotation.Component;
-import org.xwiki.component.manager.ComponentLookupException;
-import org.xwiki.component.manager.ComponentManager;
-import org.xwiki.contrib.urlnormalizer.DocumentNormalizer;
 import org.xwiki.contrib.urlnormalizer.NormalizationException;
+import org.xwiki.contrib.urlnormalizer.URLNormalizationManager;
 import org.xwiki.observation.AbstractEventListener;
 import org.xwiki.observation.event.Event;
-import org.xwiki.rendering.parser.Parser;
-import org.xwiki.rendering.renderer.BlockRenderer;
 
 import com.xpn.xwiki.doc.XWikiDocument;
 
@@ -56,18 +54,10 @@ public class URLNormalizerListener extends AbstractEventListener
     static final String NAME = "URLNormalizer";
 
     @Inject
-    private ComponentManager componentManager;
-
-    @Inject
     private Logger logger;
 
     @Inject
-    @Named("content")
-    private DocumentNormalizer contentNormalizer;
-
-    @Inject
-    @Named("object/modified")
-    private DocumentNormalizer modifiedObjectNormalizer;
+    private URLNormalizationManager urlNormalizationManager;
 
     /**
      * Builds a new {@link URLNormalizerListener}.
@@ -82,26 +72,12 @@ public class URLNormalizerListener extends AbstractEventListener
     {
         XWikiDocument document = (XWikiDocument) source;
 
-        this.logger.debug("Normalizing local URLs for [{}]...", document.getDocumentReference());
-
-        // For performance persons, we check early and only perform processing if there's a parser and renderer for the
-        // syntax of the document that was modified as otherwise we won't be able to find links and normalize them.
-        if (this.componentManager.hasComponent(BlockRenderer.class, document.getSyntax().toIdString())
-            && this.componentManager.hasComponent(Parser.class, document.getSyntax().toIdString()))
-        {
-            try {
-                // Retrieve the parser and the renderer that should be used in order to normalize XProperty contents
-                // and Macro contents.
-                Parser parser = this.componentManager.getInstance(Parser.class, document.getSyntax().toIdString());
-                BlockRenderer blockRenderer = this.componentManager.getInstance(BlockRenderer.class,
-                    document.getSyntax().toIdString());
-
-                contentNormalizer.normalize(document, parser, blockRenderer);
-                modifiedObjectNormalizer.normalize(document, parser, blockRenderer);
-            } catch (ComponentLookupException | NormalizationException e) {
-                this.logger.warn("Unable to normalize URLs for document [{}]. Root error [{}]",
-                    document.getDocumentReference(), ExceptionUtils.getRootCauseMessage(e));
-            }
+        try {
+            urlNormalizationManager.normalize(document, Arrays.asList(ContentDocumentNormalizer.HINT,
+                ModifiedObjectDocumentNormalizer.HINT));
+        } catch (NormalizationException e) {
+            this.logger.warn("Unable to normalize URLs for document [{}]. Root error [{}]",
+                document.getDocumentReference(), ExceptionUtils.getRootCauseMessage(e));
         }
     }
 }

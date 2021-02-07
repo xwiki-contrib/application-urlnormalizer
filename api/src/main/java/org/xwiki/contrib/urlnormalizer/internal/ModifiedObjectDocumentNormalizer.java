@@ -42,10 +42,15 @@ import com.xpn.xwiki.objects.classes.TextAreaClass;
  * @since 1.4
  */
 @Component
-@Named("object/modified")
+@Named(ModifiedObjectDocumentNormalizer.HINT)
 @Singleton
 public class ModifiedObjectDocumentNormalizer extends AbstractObjectDocumentNormalizer
 {
+    /**
+     * The hint of the component.
+     */
+    public static final String HINT = "object/modified";
+
     @Override
     public boolean normalize(XWikiDocument document, Parser parser, BlockRenderer blockRenderer)
         throws NormalizationException

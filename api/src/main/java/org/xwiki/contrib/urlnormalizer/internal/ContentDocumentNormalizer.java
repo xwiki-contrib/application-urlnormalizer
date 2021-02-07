@@ -40,10 +40,15 @@ import com.xpn.xwiki.doc.XWikiDocument;
  * @since 1.4
  */
 @Component
-@Named("content")
+@Named(ContentDocumentNormalizer.HINT)
 @Singleton
 public class ContentDocumentNormalizer implements DocumentNormalizer
 {
+    /**
+     * The hint of this component.
+     */
+    public static final String HINT = "content";
+
     @Inject
     @Named("link")
     private XDOMNormalizer linkXDOMNormalizer;
