@@ -33,6 +33,13 @@
   <dependencies>
     <dependency>
       <groupId>org.xwiki.contrib</groupId>
+      <artifactId>macro-job</artifactId>
+      <version>${jobMacro.version}</version>
+      <scope>runtime</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.xwiki.contrib</groupId>
       <artifactId>application-urlnormalizer-script</artifactId>
       <version>${project.version}</version>
       <scope>runtime</scope>

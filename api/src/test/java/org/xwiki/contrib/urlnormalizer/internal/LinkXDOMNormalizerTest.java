@@ -38,6 +38,7 @@ import org.xwiki.rendering.listener.reference.ResourceType;
 import org.xwiki.test.mockito.MockitoComponentMockingRule;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
@@ -120,7 +121,7 @@ public class LinkXDOMNormalizerTest
 
         boolean modified = mocker.getComponentUnderTest().normalize(xdom, null, null);
 
-        assertTrue(modified);
+        assertFalse(modified);
         assertTrue(xdom.getChildren().get(0) instanceof LinkBlock);
         assertEquals(internalLinkReference, ((LinkBlock) xdom.getChildren().get(0)).getReference());
     }
@@ -157,10 +158,11 @@ public class LinkXDOMNormalizerTest
         when(resourceReferenceNormalizer.normalize(reference)).thenReturn(normalizedReference);
 
         XDOM xdom = new XDOM(mockLinkBlocks(Arrays.asList(reference), Collections.singletonMap("queryString", "a=bb")));
+        XDOM oldXDOM = xdom.clone();
 
         boolean modified = mocker.getComponentUnderTest().normalize(xdom, null, null);
 
-        assertTrue(modified);
+        assertFalse(modified);
         assertTrue(xdom.getChildren().get(0) instanceof LinkBlock);
         assertEquals("http://some/url?a=b", ((LinkBlock) xdom.getChildren().get(0)).getReference().getReference());
         assertEquals(1, xdom.getChildren().get(0).getParameters().size());

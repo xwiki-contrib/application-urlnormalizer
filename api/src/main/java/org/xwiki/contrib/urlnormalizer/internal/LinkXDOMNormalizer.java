@@ -67,15 +67,16 @@ public class LinkXDOMNormalizer implements XDOMNormalizer
     @Override
     public boolean normalize(XDOM xdom, Parser parser, BlockRenderer blockRenderer)
     {
+        boolean normalized = false;
+
         List<LinkBlock> linkBlocks = xdom.getBlocks(new ClassBlockMatcher(LinkBlock.class),
             Block.Axes.DESCENDANT_OR_SELF);
 
         if (linkBlocks.size() > 0) {
-            normalize(linkBlocks);
-            return true;
+            normalized |= normalize(linkBlocks);
         }
 
-        return false;
+        return normalized;
     }
 
     /**
@@ -83,8 +84,10 @@ public class LinkXDOMNormalizer implements XDOMNormalizer
      *
      * @param linkBlocks the list of URL (link) blocks which will be updated and normalized
      */
-    private void normalize(List<LinkBlock> linkBlocks)
+    private boolean normalize(List<LinkBlock> linkBlocks)
     {
+        boolean normalized = false;
+
         for (int i = 0; i < linkBlocks.size(); i++) {
             LinkBlock linkBlock = linkBlocks.get(i);
 
@@ -120,10 +123,14 @@ public class LinkXDOMNormalizer implements XDOMNormalizer
 
                 // Update the list given in parameter
                 linkBlocks.set(i, newLinkBlock);
+
+                normalized = true;
             }
 
             this.logger.debug("Normalized link to [{}] into [{}]", originalReference, newReference);
         }
+
+        return normalized;
     }
 
     private boolean handleQueryStringParameters(LinkBlock linkBlock, ResourceReference newReference)

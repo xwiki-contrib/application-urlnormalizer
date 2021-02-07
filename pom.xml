@@ -53,6 +53,8 @@
     <xwiki.release.jira.skip>false</xwiki.release.jira.skip>
     <xwiki.issueManagement.system>jira</xwiki.issueManagement.system>
     <xwiki.issueManagement.url>https://jira.xwiki.org/browse/URLNORMALZ</xwiki.issueManagement.url>
+
+    <jobMacro.version>1.4</jobMacro.version>
   </properties>
   <modules>
     <module>api</module>
