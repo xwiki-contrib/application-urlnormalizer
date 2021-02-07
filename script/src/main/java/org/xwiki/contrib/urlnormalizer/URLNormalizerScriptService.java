@@ -78,7 +78,7 @@ public class URLNormalizerScriptService implements ScriptService
     public boolean normalize(DocumentReference documentReference)
     {
         if (contextualAuthorizationManager.hasAccess(Right.EDIT, documentReference)) {
-            return normalizeInternal(documentReference, true);
+            return normalizeInternal(documentReference);
         } else {
             logger.error("The user doesn't have ");
             return false;
@@ -100,7 +100,7 @@ public class URLNormalizerScriptService implements ScriptService
             return normalize(documentReference);
         } else if (contextualAuthorizationManager.hasAccess(Right.ADMIN,
             documentAccessBridge.getCurrentDocumentReference())) {
-            return normalizeInternal(documentReference, false);
+            return normalizeInternal(documentReference);
         } else {
             logger.error("The user [{}] doesn't have the right to normalize the document [{}] "
                 + "without creating a new version.", documentReference, documentAccessBridge.getCurrentUserReference());
@@ -108,7 +108,13 @@ public class URLNormalizerScriptService implements ScriptService
         }
     }
 
-    private boolean normalizeInternal(DocumentReference documentReference, boolean createNewVersion)
+    /**
+     * Perform a simple normalization on the given document.
+     *
+     * @param documentReference the document to normalize.
+     * @return true if the document has been modified, false otherwise
+     */
+    private boolean normalizeInternal(DocumentReference documentReference)
     {
         try {
             return urlNormalizationManager.normalize(documentReference);
