@@ -127,7 +127,10 @@ public class DefaultURLNormalizationManager implements URLNormalizationManager
                 BlockRenderer blockRenderer = componentManager.getInstance(BlockRenderer.class,
                     document.getSyntax().toIdString());
 
-                modified = applyNormalizers(document, normalizers, parser, blockRenderer);
+                // If no normalizers are provided, fallback on the default
+                modified = applyNormalizers(document,
+                    (normalizers.isEmpty()) ? DEFAULT_NORMALIZERS : normalizers,
+                    parser, blockRenderer);
             } catch (ComponentLookupException e) {
                 logger.warn(
                     "Unable to load a parser or a renderer for the syntax [{}] of the document [{}]. Root cause : [{}]",

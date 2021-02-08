@@ -19,6 +19,8 @@
  */
 package org.xwiki.contrib.urlnormalizer;
 
+import java.util.Collections;
+
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
@@ -78,7 +80,7 @@ public class URLNormalizerScriptService implements ScriptService
     public boolean normalize(DocumentReference documentReference)
     {
         if (contextualAuthorizationManager.hasAccess(Right.EDIT, documentReference)) {
-            return normalizeInternal(documentReference);
+            return normalizeInternal(documentReference, true);
         } else {
             logger.error("The user doesn't have ");
             return false;
@@ -100,7 +102,7 @@ public class URLNormalizerScriptService implements ScriptService
             return normalize(documentReference);
         } else if (contextualAuthorizationManager.hasAccess(Right.ADMIN,
             documentAccessBridge.getCurrentDocumentReference())) {
-            return normalizeInternal(documentReference);
+            return normalizeInternal(documentReference, false);
         } else {
             logger.error("The user [{}] doesn't have the right to normalize the document [{}] "
                 + "without creating a new version.", documentReference, documentAccessBridge.getCurrentUserReference());
@@ -112,12 +114,13 @@ public class URLNormalizerScriptService implements ScriptService
      * Perform a simple normalization on the given document.
      *
      * @param documentReference the document to normalize.
+     * @param createNewVersion whether a new version of the document should be created
      * @return true if the document has been modified, false otherwise
      */
-    private boolean normalizeInternal(DocumentReference documentReference)
+    private boolean normalizeInternal(DocumentReference documentReference, boolean createNewVersion)
     {
         try {
-            return urlNormalizationManager.normalize(documentReference);
+            return urlNormalizationManager.normalize(documentReference, Collections.EMPTY_LIST, createNewVersion);
         } catch (NormalizationException e) {
             logger.error("Failed to normalize document [{}]", documentReference, e);
             return false;

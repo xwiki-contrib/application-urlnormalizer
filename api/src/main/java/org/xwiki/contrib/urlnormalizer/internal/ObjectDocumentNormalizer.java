@@ -36,6 +36,7 @@ import com.xpn.xwiki.XWikiContext;
 import com.xpn.xwiki.doc.XWikiDocument;
 import com.xpn.xwiki.objects.BaseObject;
 import com.xpn.xwiki.objects.BaseProperty;
+import com.xpn.xwiki.objects.classes.PropertyClass;
 
 /**
  * Normalizer that will try to normalize every object of the given document.
@@ -57,24 +58,54 @@ public class ObjectDocumentNormalizer extends AbstractObjectDocumentNormalizer
     public boolean normalize(XWikiDocument document, Parser parser, BlockRenderer blockRenderer)
         throws NormalizationException
     {
-        XWikiContext context = xWikiContextProvider.get();
         boolean modified = false;
 
         for (Map.Entry<DocumentReference, List<BaseObject>> objectsMap : document.getXObjects().entrySet()) {
-            // Load the corresponding XClass, check if it contains fields that can be normalized
-            Object[] baseProperties = objectsMap.getValue().get(0).getProperties();
-            List<String> propertiesToNormalize = new ArrayList<>();
+            modified |= normalizeObjects(objectsMap, parser, blockRenderer);
+        }
 
-            for (Object basePropertyObj : baseProperties) {
-                if (basePropertyObj instanceof BaseProperty) {
-                    BaseProperty baseProperty = (BaseProperty) basePropertyObj;
-                    if (baseProperty.getPropertyClass(context).getClassType().equals(TEXT_AREA)) {
-                        propertiesToNormalize.add(baseProperty.getName());
-                    }
+        return modified;
+    }
+
+    private boolean normalizeObjects(Map.Entry<DocumentReference, List<BaseObject>> objectsMap, Parser parser,
+        BlockRenderer blockRenderer) throws NormalizationException
+    {
+        // Load the corresponding XClass, check if it contains fields that can be normalized
+        // Search for a non-null entry in the objectMap
+        Object[] baseProperties = null;
+        for (int i = 0; i < objectsMap.getValue().size() && baseProperties == null; i++) {
+            if (objectsMap.getValue().get(i) != null) {
+                baseProperties = objectsMap.getValue().get(i).getProperties();
+            }
+        }
+
+        if (baseProperties != null) {
+            return normalizeObject(baseProperties, objectsMap, parser, blockRenderer);
+        }
+
+        return false;
+    }
+
+    private boolean normalizeObject(Object[] baseProperties,
+        Map.Entry<DocumentReference, List<BaseObject>> objectsMap, Parser parser, BlockRenderer blockRenderer)
+        throws NormalizationException
+    {
+        boolean modified = false;
+        XWikiContext context = xWikiContextProvider.get();
+        List<String> propertiesToNormalize = new ArrayList<>();
+
+        for (Object basePropertyObj : baseProperties) {
+            if (basePropertyObj instanceof BaseProperty) {
+                BaseProperty baseProperty = (BaseProperty) basePropertyObj;
+                PropertyClass propertyClass = baseProperty.getPropertyClass(context);
+                if (propertyClass != null && propertyClass.getClassType().equals(TEXT_AREA)) {
+                    propertiesToNormalize.add(baseProperty.getName());
                 }
             }
+        }
 
-            for (BaseObject object : objectsMap.getValue()) {
+        for (BaseObject object : objectsMap.getValue()) {
+            if (object != null) {
                 modified |= normalizeDocumentXObject(object, propertiesToNormalize, parser, blockRenderer);
             }
         }

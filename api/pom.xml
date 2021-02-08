@@ -30,11 +30,6 @@
   <artifactId>application-urlnormalizer-api</artifactId>
   <name>Wiki Link URL Normalizer - API</name>
   <properties>
-    <xwiki.extension.features>
-      org.xwiki.contrib:listener-urlnormalizer,
-      org.xwiki.contrib:listener-urlnormalizer-api
-    </xwiki.extension.features>
-    <xwiki.extension.name>Wiki Link URL Normalizer</xwiki.extension.name>
     <xwiki.jacoco.instructionRatio>0.59</xwiki.jacoco.instructionRatio>
   </properties>
   <dependencies>

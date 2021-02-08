@@ -30,6 +30,13 @@
   <artifactId>application-urlnormalizer-ui</artifactId>
   <name>Wiki Link URL Normalizer - UI</name>
   <packaging>xar</packaging>
+  <properties>
+    <xwiki.extension.name>Wiki Link URL Normalizer</xwiki.extension.name>
+    <xwiki.extension.features>
+      org.xwiki.contrib:listener-urlnormalizer,
+      org.xwiki.contrib:listener-urlnormalizer-api
+    </xwiki.extension.features>
+  </properties>
   <dependencies>
     <dependency>
       <groupId>org.xwiki.contrib</groupId>

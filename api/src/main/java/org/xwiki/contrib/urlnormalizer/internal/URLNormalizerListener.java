@@ -72,6 +72,13 @@ public class URLNormalizerListener extends AbstractEventListener
     {
         XWikiDocument document = (XWikiDocument) source;
 
+        // Save the metaDataDirty and contentDirty variables so that, in the event where the document save is called
+        // by a script that doesn't want to create new verisons in the document history, we don't screw the script
+        // behavior.
+        // TODO: In the future, make this a customizable property of the application
+        boolean metaDataDirty = document.isMetaDataDirty();
+        boolean contentDirty = document.isContentDirty();
+
         try {
             urlNormalizationManager.normalize(document, Arrays.asList(ContentDocumentNormalizer.HINT,
                 ModifiedObjectDocumentNormalizer.HINT));
@@ -79,5 +86,8 @@ public class URLNormalizerListener extends AbstractEventListener
             this.logger.warn("Unable to normalize URLs for document [{}]. Root error [{}]",
                 document.getDocumentReference(), ExceptionUtils.getRootCauseMessage(e));
         }
+
+        document.setMetaDataDirty(metaDataDirty);
+        document.setContentDirty(contentDirty);
     }
 }
