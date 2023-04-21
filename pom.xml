@@ -25,7 +25,7 @@
   <parent>
     <groupId>org.xwiki.contrib</groupId>
     <artifactId>parent-platform</artifactId>
-    <version>8.4-8</version>
+    <version>8.4-11</version>
   </parent>
   <artifactId>application-urlnormalizer</artifactId>
   <version>1.5-SNAPSHOT</version>
@@ -49,22 +49,21 @@
     </developer>
   </developers>
   <properties>
-    <xwiki.extension.category>api</xwiki.extension.category>
     <xwiki.release.jira.skip>false</xwiki.release.jira.skip>
     <xwiki.issueManagement.jira.id>URLNORMALZ</xwiki.issueManagement.jira.id>
 
     <jobMacro.version>1.4</jobMacro.version>
   </properties>
   <modules>
-    <module>api</module>
-    <module>script</module>
-    <module>ui</module>
+    <module>application-urlnormalizer-api</module>
+    <module>application-urlnormalizer-script</module>
+    <module>application-urlnormalizer-ui</module>
   </modules>
   <profiles>
     <profile>
       <id>integration-tests</id>
       <modules>
-        <module>test</module>
+        <module>application-urlnormalizer-test</module>
       </modules>
     </profile>
   </profiles>
