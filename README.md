@@ -14,3 +14,12 @@ Convert local URLs into wiki links
 * Translations: N/A
 * Sonar Dashboard: N/A
 * Continuous Integration Status: [![Build Status](http://ci.xwiki.org/job/XWiki%20Contrib/job/listener-urlnormalizer/job/master/badge/icon)](http://ci.xwiki.org/job/XWiki%20Contrib/job/listener-urlnormalizer/job/master/)
+
+# Release
+
+* Release
+
+```
+mvn release:prepare -Pintegration-tests
+mvn release:perform -Pintegration-tests
+```
