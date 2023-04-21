@@ -19,30 +19,24 @@
  */
 package org.xwiki.contrib.urlnormalizer.internal;
 
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
 
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.xwiki.rendering.block.Block;
 import org.xwiki.rendering.block.LinkBlock;
-import org.xwiki.rendering.block.ParagraphBlock;
 import org.xwiki.rendering.block.XDOM;
 import org.xwiki.rendering.block.match.ClassBlockMatcher;
-import org.xwiki.rendering.internal.parser.XDOMBuilder;
 import org.xwiki.rendering.parser.Parser;
 import org.xwiki.rendering.renderer.BlockRenderer;
 import org.xwiki.rendering.syntax.Syntax;
 import org.xwiki.test.mockito.MockitoComponentMockingRule;
 
-import com.xpn.xwiki.XWikiContext;
 import com.xpn.xwiki.doc.XWikiDocument;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -61,8 +55,6 @@ public class ContentDocumentNormalizerTest
         new MockitoComponentMockingRule<>(ContentDocumentNormalizer.class);
 
 
-    private XWikiContext context;
-
     private BlockRenderer blockRenderer;
 
     private Parser parser;
@@ -78,8 +70,6 @@ public class ContentDocumentNormalizerTest
         this.blockRenderer = this.mocker.registerMockComponent(BlockRenderer.class, Syntax.XWIKI_2_1.toIdString());
         this.linkXDOMNormalizer = this.mocker.registerMockComponent(XDOMNormalizer.class, "link");
         this.macroXDOMNormalizer = this.mocker.registerMockComponent(XDOMNormalizer.class, "macro");
-
-        this.context = mock(XWikiContext.class);
     }
 
     @Test
