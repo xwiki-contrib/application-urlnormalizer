@@ -40,20 +40,17 @@
       <groupId>org.xwiki.contrib</groupId>
       <artifactId>application-urlnormalizer-api</artifactId>
       <version>${project.version}</version>
-      <type>jar</type>
     </dependency>
     <!-- We use the info & html macros in the test -->
     <dependency>
       <groupId>org.xwiki.rendering</groupId>
       <artifactId>xwiki-rendering-macro-message</artifactId>
       <version>${rendering.version}</version>
-      <type>jar</type>
     </dependency>
     <dependency>
       <groupId>org.xwiki.rendering</groupId>
       <artifactId>xwiki-rendering-macro-html</artifactId>
       <version>${rendering.version}</version>
-      <type>jar</type>
     </dependency>
 
     <!-- Test dependencies -->
@@ -61,23 +58,6 @@
       <groupId>org.xwiki.platform</groupId>
       <artifactId>xwiki-platform-test-ui</artifactId>
       <version>${platform.version}</version>
-      <scope>test</scope>
-    </dependency>
-    <!-- Make sure we have the Logback SLF4J binding for client side logging for our tests and make sure other logging
-         systems go through SLF4J -->
-    <dependency>
-      <groupId>ch.qos.logback</groupId>
-      <artifactId>logback-classic</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>jcl-over-slf4j</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>log4j-over-slf4j</artifactId>
       <scope>test</scope>
     </dependency>
   </dependencies>
