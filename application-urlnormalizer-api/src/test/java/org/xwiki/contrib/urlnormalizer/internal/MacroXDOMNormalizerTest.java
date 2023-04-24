@@ -22,64 +22,79 @@ package org.xwiki.contrib.urlnormalizer.internal;
 import java.io.Reader;
 import java.util.Collections;
 
-import org.junit.Rule;
-import org.junit.Test;
+import javax.inject.Named;
+
+import org.junit.jupiter.api.Test;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.xwiki.rendering.block.Block;
 import org.xwiki.rendering.block.MacroBlock;
 import org.xwiki.rendering.block.WordBlock;
 import org.xwiki.rendering.block.XDOM;
+import org.xwiki.rendering.macro.MacroManager;
 import org.xwiki.rendering.parser.Parser;
 import org.xwiki.rendering.renderer.BlockRenderer;
 import org.xwiki.rendering.renderer.printer.DefaultWikiPrinter;
 import org.xwiki.rendering.renderer.printer.WikiPrinter;
-import org.xwiki.test.mockito.MockitoComponentMockingRule;
+import org.xwiki.test.junit5.mockito.ComponentTest;
+import org.xwiki.test.junit5.mockito.InjectMockComponents;
+import org.xwiki.test.junit5.mockito.MockComponent;
 
-import static org.junit.Assert.*;
-import static org.mockito.Matchers.any;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 /**
- * Unit tests for {@link MacroXDOMNormalizer}.
+ * validate {@link MacroXDOMNormalizer}.
  *
- * @since 1.3
  * @version $Id$
  */
-public class MacroXDOMNormalizerTest
+@ComponentTest
+class MacroXDOMNormalizerTest
 {
-    @Rule
-    public final MockitoComponentMockingRule<MacroXDOMNormalizer> mocker =
-        new MockitoComponentMockingRule<>(MacroXDOMNormalizer.class);
+    @MockComponent
+    @Named("link")
+    private XDOMNormalizer linkNormalizer;
+
+    @MockComponent
+    private MacroManager macroManager;
+
+    @InjectMockComponents
+    private MacroXDOMNormalizer macroNormalizer;
 
     @Test
-    public void normalizeWhenNoMacros() throws Exception
+    void normalizeWhenNoMacros() throws Exception
     {
-        assertFalse(this.mocker.getComponentUnderTest().normalize(new XDOM(Collections.emptyList()), null, null));
+        assertFalse(this.macroNormalizer.normalize(new XDOM(Collections.emptyList()), null, null));
     }
 
     @Test
-    public void normalizeWithMacroAndNoLinks() throws Exception
+    void normalizeWithMacroAndNoLinks() throws Exception
     {
-        XDOM xdom = new XDOM(Collections.singletonList(
-            new MacroBlock("info", Collections.emptyMap(), "content", false)));
+        XDOM xdom =
+            new XDOM(Collections.singletonList(new MacroBlock("info", Collections.emptyMap(), "content", false)));
 
         Parser parser = mock(Parser.class);
         XDOM macroXDOM = new XDOM(Collections.singletonList(new WordBlock("content")));
         when(parser.parse(any(Reader.class))).thenReturn(macroXDOM);
 
-        assertFalse(this.mocker.getComponentUnderTest().normalize(xdom, parser, null));
+        assertFalse(this.macroNormalizer.normalize(xdom, parser, null));
     }
 
     @Test
-    public void normalizeWithSupportedMacroAndLink() throws Exception
+    void normalizeWithSupportedMacroAndLink() throws Exception
     {
-        XDOM xdom = new XDOM(Collections.singletonList(
-            new MacroBlock("info", Collections.emptyMap(), "content", false)));
+        MarkupContainingMacroBlockMatcherTest.mockMacro(this.macroManager, "info", true);
+
+        XDOM xdom =
+            new XDOM(Collections.singletonList(new MacroBlock("info", Collections.emptyMap(), "content", false)));
 
         Parser parser = mock(Parser.class);
+        when(parser.getSyntax()).thenReturn(MarkupContainingMacroBlockMatcherTest.SYNTAX);
         XDOM macroXDOM = new XDOM(Collections.emptyList());
         when(parser.parse(any(Reader.class))).thenReturn(macroXDOM);
 
@@ -94,11 +109,10 @@ public class MacroXDOMNormalizerTest
             }
         }).when(blockRenderer).render(any(Block.class), any(WikiPrinter.class));
 
-        XDOMNormalizer linkBlockNormalizer = this.mocker.getInstance(XDOMNormalizer.class, "link");
-        when(linkBlockNormalizer.normalize(
-            any(XDOM.class), any(Parser.class), any(BlockRenderer.class))).thenReturn(true);
+        when(this.linkNormalizer.normalize(any(XDOM.class), any(Parser.class), any(BlockRenderer.class)))
+            .thenReturn(true);
 
-        assertTrue(this.mocker.getComponentUnderTest().normalize(xdom, parser, blockRenderer));
+        assertTrue(this.macroNormalizer.normalize(xdom, parser, blockRenderer));
         MacroBlock resultMacroBlock = (MacroBlock) xdom.getChildren().get(0);
         assertEquals("normalizedMacroContent", resultMacroBlock.getContent());
     }

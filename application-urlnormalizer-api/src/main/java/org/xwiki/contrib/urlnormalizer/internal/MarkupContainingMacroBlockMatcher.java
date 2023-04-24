@@ -19,45 +19,89 @@
  */
 package org.xwiki.contrib.urlnormalizer.internal;
 
-import java.util.Arrays;
-import java.util.List;
-
+import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xwiki.rendering.block.Block;
+import org.xwiki.rendering.block.Block.Axes;
 import org.xwiki.rendering.block.MacroBlock;
+import org.xwiki.rendering.block.MetaDataBlock;
 import org.xwiki.rendering.block.match.ClassBlockMatcher;
+import org.xwiki.rendering.block.match.MetadataBlockMatcher;
+import org.xwiki.rendering.listener.MetaData;
+import org.xwiki.rendering.macro.Macro;
+import org.xwiki.rendering.macro.MacroId;
+import org.xwiki.rendering.macro.MacroLookupException;
+import org.xwiki.rendering.macro.MacroManager;
+import org.xwiki.rendering.macro.descriptor.ContentDescriptor;
+import org.xwiki.rendering.syntax.Syntax;
 
 /**
- * The supported list of macros is static and correspond to well-known macros that are known to contain wiki markup
- * (e.g. info, warning, error  macros). In the future this should be improved thanks to
- * <a href="https://jira.xwiki.org/browse/XRENDERING-116">XRENDERING-116</a>.
+ * Filter macros which contains wiki syntax content.
  *
  * @version $Id$
  * @since 1.3
  */
 public class MarkupContainingMacroBlockMatcher extends ClassBlockMatcher
 {
-    /**
-     * Names of macros that support wiki markup and the markup syntax is that of the current document.
-     */
-    private static final List<String> SUPPORTED_MACRO = Arrays.asList(
-        "message",
-        "warning",
-        "info",
-        "error",
-        "success",
-        "cache",
-        "context",
-        "box",
-        "comment",
-        "container",
-        "todo");
+    private static final Logger LOGGER = LoggerFactory.getLogger(MarkupContainingMacroBlockMatcher.class);
+
+    private static final MetadataBlockMatcher SYNTAX_MATCHER = new MetadataBlockMatcher(MetaData.SYNTAX);
+
+    private final MacroManager macroManager;
+
+    private final Syntax defaultSyntax;
 
     /**
-     * Default constructor.
+     * @param macroManager the component to search for macro descriptors
+     * @param defaultSyntax the default syntax of the content
+     * @since 1.5
      */
-    public MarkupContainingMacroBlockMatcher()
+    public MarkupContainingMacroBlockMatcher(MacroManager macroManager, Syntax defaultSyntax)
     {
         super(MacroBlock.class);
+
+        this.macroManager = macroManager;
+        this.defaultSyntax = defaultSyntax;
+    }
+
+    private Syntax getSyntax(MacroBlock macro)
+    {
+        Syntax currentSyntax = this.defaultSyntax;
+
+        MetaDataBlock metaDataBlock = macro.getFirstBlock(SYNTAX_MATCHER, Axes.ANCESTOR_OR_SELF);
+
+        if (metaDataBlock != null) {
+            currentSyntax = (Syntax) metaDataBlock.getMetaData().getMetaData(MetaData.SYNTAX);
+        }
+
+        return currentSyntax;
+    }
+
+    private Macro<?> getMacro(MacroBlock macroBlock)
+    {
+        MacroId macroId = new MacroId(macroBlock.getId(), getSyntax(macroBlock));
+        try {
+            return this.macroManager.getMacro(macroId);
+        } catch (MacroLookupException e) {
+            // if the macro cannot be found or instantiated we shouldn't raise an exception, just ignore that macro.
+            LOGGER.debug("Cannot get macro with id [{}]: [{}]", macroId, ExceptionUtils.getRootCauseMessage(e));
+
+            return null;
+        }
+    }
+
+    private boolean shouldMacroContentBeParsed(MacroBlock macroBlock)
+    {
+        Macro<?> macro = getMacro(macroBlock);
+
+        if (macro != null) {
+            ContentDescriptor contentDescriptor = macro.getDescriptor().getContentDescriptor();
+
+            return contentDescriptor != null && Block.LIST_BLOCK_TYPE.equals(contentDescriptor.getType());
+        }
+
+        return false;
     }
 
     @Override
@@ -67,9 +111,11 @@ public class MarkupContainingMacroBlockMatcher extends ClassBlockMatcher
 
         if (super.match(block)) {
             MacroBlock macroBlock = (MacroBlock) block;
-            if (SUPPORTED_MACRO.contains(macroBlock.getId())) {
+            if (shouldMacroContentBeParsed(macroBlock)) {
+                // Macro with content of type wiki
                 match = true;
-            } else if (macroBlock.getId().equals("html") && Boolean.valueOf(macroBlock.getParameter("wiki"))) {
+            } else if (macroBlock.getId().equals("html") && Boolean.parseBoolean(macroBlock.getParameter("wiki"))) {
+                // HTML macro with enabled wiki content
                 match = true;
             }
         }

@@ -21,52 +21,105 @@ package org.xwiki.contrib.urlnormalizer.internal;
 
 import java.util.Collections;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.xwiki.rendering.block.Block;
 import org.xwiki.rendering.block.MacroBlock;
 import org.xwiki.rendering.block.WordBlock;
+import org.xwiki.rendering.macro.Macro;
+import org.xwiki.rendering.macro.MacroId;
+import org.xwiki.rendering.macro.MacroLookupException;
+import org.xwiki.rendering.macro.MacroManager;
+import org.xwiki.rendering.macro.descriptor.ContentDescriptor;
+import org.xwiki.rendering.macro.descriptor.MacroDescriptor;
+import org.xwiki.rendering.syntax.Syntax;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
- * Matches known-macros Macros that contain wiki markup using the syntax of the enclosing document.
+ * Validate {@link MarkupContainingMacroBlockMatcher}.
  *
  * @version $Id$
- * @since 1.4
  */
-public class MarkupContainingMacroBlockMatcherTest
+class MarkupContainingMacroBlockMatcherTest
 {
-    @Test
-    public void matchUnknownMacro()
+    public static final Syntax SYNTAX = Syntax.XWIKI_2_1;
+
+    private MacroManager macroManager = mock(MacroManager.class);
+
+    public static void mockMacro(MacroManager macroManager, String macroName, boolean wiki) throws MacroLookupException
     {
-        assertFalse(new MarkupContainingMacroBlockMatcher().match(
-            new MacroBlock("unknown", Collections.emptyMap(), false)));
+        mockMacro(macroManager, macroName, wiki, wiki);
+    }
+
+    public static void mockMacro(MacroManager macroManager, String macroName, boolean content, boolean wiki)
+        throws MacroLookupException
+    {
+        Macro macro = mock(Macro.class);
+        when(macroManager.getMacro(new MacroId(macroName, SYNTAX))).thenReturn(macro);
+        MacroDescriptor macroDescriptor = mock(MacroDescriptor.class);
+        when(macro.getDescriptor()).thenReturn(macroDescriptor);
+
+        if (content) {
+            ContentDescriptor contentDescriptor = mock(ContentDescriptor.class);
+            when(macroDescriptor.getContentDescriptor()).thenReturn(contentDescriptor);
+            when(contentDescriptor.getType()).thenReturn(wiki ? Block.LIST_BLOCK_TYPE : String.class);
+        }
     }
 
     @Test
-    public void matchNonMacroBlock()
+    void matchNonMacroBlock()
     {
-        assertFalse(new MarkupContainingMacroBlockMatcher().match(new WordBlock("whatever")));
+        assertFalse(new MarkupContainingMacroBlockMatcher(this.macroManager, SYNTAX).match(new WordBlock("whatever")));
     }
 
     @Test
-    public void matchKnownMacro()
+    void matchNotExistMacro()
     {
-        assertTrue(new MarkupContainingMacroBlockMatcher().match(
-            new MacroBlock("success", Collections.emptyMap(), false)));
+        assertFalse(new MarkupContainingMacroBlockMatcher(this.macroManager, SYNTAX)
+            .match(new MacroBlock("notexist", Collections.emptyMap(), false)));
     }
 
     @Test
-    public void matchHTMLMacroWhenNotContainingWikiSyntax()
+    void matchNoContentMacro() throws MacroLookupException
     {
-        assertFalse(new MarkupContainingMacroBlockMatcher().match(
-            new MacroBlock("html", Collections.emptyMap(), false)));
+        mockMacro(macroManager, "nocontent", false);
+
+        assertFalse(new MarkupContainingMacroBlockMatcher(this.macroManager, SYNTAX)
+            .match(new MacroBlock("nocontent", Collections.emptyMap(), false)));
     }
 
+    @Test
+    void matchNotWikiContentMacro() throws MacroLookupException
+    {
+        mockMacro(macroManager, "notwiki", true, false);
+
+        assertFalse(new MarkupContainingMacroBlockMatcher(this.macroManager, SYNTAX)
+            .match(new MacroBlock("notwiki", Collections.emptyMap(), false)));
+    }
 
     @Test
-    public void matchHTMLMacroWhenContainingWikiSyntax()
+    void matchWikiContentMacro() throws MacroLookupException
     {
-        assertTrue(new MarkupContainingMacroBlockMatcher().match(
-            new MacroBlock("html", Collections.singletonMap("wiki", "true"), false)));
+        mockMacro(macroManager, "wiki", true);
+
+        assertTrue(new MarkupContainingMacroBlockMatcher(this.macroManager, SYNTAX)
+            .match(new MacroBlock("wiki", Collections.emptyMap(), false)));
+    }
+
+    @Test
+    void matchHTMLMacroWhenNotContainingWikiSyntax()
+    {
+        assertFalse(new MarkupContainingMacroBlockMatcher(this.macroManager, SYNTAX)
+            .match(new MacroBlock("html", Collections.emptyMap(), false)));
+    }
+
+    @Test
+    void matchHTMLMacroWhenContainingWikiSyntax()
+    {
+        assertTrue(new MarkupContainingMacroBlockMatcher(this.macroManager, SYNTAX)
+            .match(new MacroBlock("html", Collections.singletonMap("wiki", "true"), false)));
     }
 }

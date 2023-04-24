@@ -31,11 +31,14 @@ import org.xwiki.component.annotation.Component;
 import org.xwiki.rendering.block.Block;
 import org.xwiki.rendering.block.MacroBlock;
 import org.xwiki.rendering.block.XDOM;
+import org.xwiki.rendering.listener.MetaData;
+import org.xwiki.rendering.macro.MacroManager;
 import org.xwiki.rendering.parser.ParseException;
 import org.xwiki.rendering.parser.Parser;
 import org.xwiki.rendering.renderer.BlockRenderer;
 import org.xwiki.rendering.renderer.printer.DefaultWikiPrinter;
 import org.xwiki.rendering.renderer.printer.WikiPrinter;
+import org.xwiki.rendering.syntax.Syntax;
 
 /**
  * Transform local links found in some Macros in the passed XDOM into wiki links. See
@@ -53,17 +56,34 @@ public class MacroXDOMNormalizer implements XDOMNormalizer
     private Logger logger;
 
     @Inject
+    private MacroManager macroManager;
+
+    @Inject
     @Named("link")
     private XDOMNormalizer linkXDOMNormalizer;
+
+    private Syntax getSyntax(XDOM xdom, Parser parser)
+    {
+        Syntax syntax = (Syntax) xdom.getMetaData().getMetaData(MetaData.SYNTAX);
+
+        if (syntax == null) {
+            syntax = parser.getSyntax();
+        }
+
+        return syntax;
+    }
 
     @Override
     public boolean normalize(XDOM xdom, Parser parser, BlockRenderer blockRenderer)
     {
-        List<MacroBlock> macroBlocks =
-            xdom.getBlocks(new MarkupContainingMacroBlockMatcher(), Block.Axes.DESCENDANT_OR_SELF);
+        if (parser != null) {
+            List<MacroBlock> macroBlocks =
+                xdom.getBlocks(new MarkupContainingMacroBlockMatcher(this.macroManager, getSyntax(xdom, parser)),
+                    Block.Axes.DESCENDANT_OR_SELF);
 
-        if (macroBlocks.size() > 0) {
-            return normalize(macroBlocks, parser, blockRenderer);
+            if (!macroBlocks.isEmpty()) {
+                return normalize(macroBlocks, parser, blockRenderer);
+            }
         }
 
         return false;

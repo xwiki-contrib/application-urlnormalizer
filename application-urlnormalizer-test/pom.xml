@@ -55,6 +55,7 @@
       <version>${rendering.version}</version>
       <type>jar</type>
     </dependency>
+
     <!-- Test dependencies -->
     <dependency>
       <groupId>org.xwiki.platform</groupId>
