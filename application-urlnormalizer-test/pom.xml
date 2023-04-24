@@ -30,6 +30,8 @@
   <properties>
     <!-- Functional tests are allowed to output content to the console -->
     <xwiki.surefire.captureconsole.skip>true</xwiki.surefire.captureconsole.skip>
+
+    <xwikiCfgSuperadminPassword>pass</xwikiCfgSuperadminPassword>
   </properties>
   <packaging>jar</packaging>
   <dependencies>
