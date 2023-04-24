@@ -58,8 +58,8 @@ public class URLNormalizerTest extends AbstractTest
     {
         absoluteInternalUrl = String.format("%sbin/view/Main", getUtil().getBaseURL());
 
-        escapedAbsoluteInternalUrl = String.format("%sbin/view/Main",
-                getUtil().getBaseURL().replaceAll("://", ":~~/~~/"));
+        escapedAbsoluteInternalUrl =
+            String.format("%sbin/view/Main", getUtil().getBaseURL().replaceAll("://", ":~~/~~/"));
 
         absoluteExternalUrl = "http://example.org/some/other/random/link";
     }
@@ -73,49 +73,49 @@ public class URLNormalizerTest extends AbstractTest
 
         // Test for a simple copy-pasted external URL
         content.append(String.format("%s\n", absoluteExternalUrl));
-        expectedResultBuilder.append(String.format("%s ", absoluteExternalUrl));
+        expectedResultBuilder.append(String.format("%s\n", absoluteExternalUrl));
 
         // Test for a simple copy-pasted internal URL
         content.append(String.format("%s\n", absoluteInternalUrl));
-        expectedResultBuilder.append(String.format("[[%s>>doc:Main.WebHome]] ", escapedAbsoluteInternalUrl));
+        expectedResultBuilder.append(String.format("[[%s>>doc:Main.WebHome]]\n", escapedAbsoluteInternalUrl));
 
         // Test for a wiki link with an external URL
         content.append(String.format("[[example.org>>%s]]\n", absoluteExternalUrl));
-        expectedResultBuilder.append(String.format("[[example.org>>%s]] ", absoluteExternalUrl));
+        expectedResultBuilder.append(String.format("[[example.org>>%s]]\n", absoluteExternalUrl));
 
         // Test for a wiki link with an internal URL
         content.append(String.format("[[Main page>>%s]]\n", absoluteInternalUrl));
-        expectedResultBuilder.append("[[Main page>>doc:Main.WebHome]] ");
+        expectedResultBuilder.append("[[Main page>>doc:Main.WebHome]]\n");
 
         // Test for a wiki link with an internal URL with a query string
         content.append(String.format("[[Main page>>%s]]\n", absoluteInternalUrl + "?xpage=xml"));
-        expectedResultBuilder.append("[[Main page>>doc:Main.WebHome||queryString=\"xpage=xml\"]] ");
+        expectedResultBuilder.append("[[Main page>>doc:Main.WebHome||queryString=\"xpage=xml\"]]\n");
 
         // Test that we ignore fragments FTM, see https://jira.xwiki.org/browse/URLNORMALZ-11
         content.append(String.format("[[Main page>>%s]]\n", absoluteInternalUrl + "#anchor"));
-        expectedResultBuilder.append(String.format("[[Main page>>%s]] ", absoluteInternalUrl + "#anchor"));
+        expectedResultBuilder.append(String.format("[[Main page>>%s]]\n", absoluteInternalUrl + "#anchor"));
 
         // Test for a classic wiki link
         content.append("[[Main page>>doc:Main.WebHome]]\n");
-        expectedResultBuilder.append("[[Main page>>doc:Main.WebHome]] ");
+        expectedResultBuilder.append("[[Main page>>doc:Main.WebHome]]\n");
 
         // Test for a download wiki link
-        content.append(String.format("[[Attachment>>%sbin/download/Main/WebHome/image.png]]\n",
-            getUtil().getBaseURL()));
-        expectedResultBuilder.append("[[Attachment>>attach:Main.WebHome@image.png]] ");
+        content
+            .append(String.format("[[Attachment>>%sbin/download/Main/WebHome/image.png]]\n", getUtil().getBaseURL()));
+        expectedResultBuilder.append("[[Attachment>>attach:Main.WebHome@image.png]]\n");
 
         // Test for a non-view wiki link
         String nonViewWikiLink = String.format("%sbin/edit/Main", getUtil().getBaseURL());
         content.append(String.format("[[Label>>%s]]\n", nonViewWikiLink));
-        expectedResultBuilder.append(String.format("[[Label>>%s]] ", nonViewWikiLink));
+        expectedResultBuilder.append(String.format("[[Label>>%s]]\n", nonViewWikiLink));
 
         // Test for a wiki link in an info macro
         content.append(String.format("{{info}}[[Label>>%s]]{{/info}}\n", absoluteInternalUrl));
-        expectedResultBuilder.append("{{info}}[[Label>>doc:Main.WebHome]]{{/info}} ");
+        expectedResultBuilder.append("{{info}}[[Label>>doc:Main.WebHome]]{{/info}}\n");
 
         // Test for a wiki link in an HTML macro with wiki=true
         content.append(String.format("\n{{html wiki='true'}}[[Label>>%s]]{{/html}}", absoluteInternalUrl));
-        expectedResultBuilder.append("{{html wiki=\"true\"}} [[Label>>doc:Main.WebHome]] {{/html}}");
+        expectedResultBuilder.append("\n{{html wiki=\"true\"}}\n[[Label>>doc:Main.WebHome]]\n{{/html}}");
 
         ViewPage page = getUtil().createPage(getTestClassName(), getTestMethodName(), "", "URL Normalizer Tests");
 
