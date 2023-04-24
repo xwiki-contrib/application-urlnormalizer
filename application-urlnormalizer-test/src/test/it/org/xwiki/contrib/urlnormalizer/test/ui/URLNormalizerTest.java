@@ -47,7 +47,7 @@ public class URLNormalizerTest extends AbstractTest
     @Before
     public void setUp() throws Exception
     {
-        getUtil().loginAsAdmin();
+        getUtil().loginAsSuperAdmin();
         getUtil().createUserAndLogin(getTestClassName(), "password", "usertype", "Advanced");
 
         getUtil().deletePage(getTestClassName(), getTestMethodName());
