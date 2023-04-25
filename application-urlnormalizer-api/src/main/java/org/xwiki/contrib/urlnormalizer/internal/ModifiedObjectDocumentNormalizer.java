@@ -32,8 +32,8 @@ import org.xwiki.rendering.renderer.BlockRenderer;
 import com.xpn.xwiki.XWikiContext;
 import com.xpn.xwiki.doc.XWikiDocument;
 import com.xpn.xwiki.objects.BaseObject;
+import com.xpn.xwiki.objects.BaseProperty;
 import com.xpn.xwiki.objects.ObjectDiff;
-import com.xpn.xwiki.objects.classes.TextAreaClass;
 
 /**
  * Normalizer that will only look at the last modified XObjects of the given document.
@@ -55,28 +55,22 @@ public class ModifiedObjectDocumentNormalizer extends AbstractObjectDocumentNorm
     public boolean normalize(XWikiDocument document, Parser parser, BlockRenderer blockRenderer)
         throws NormalizationException
     {
-        XWikiContext context = xWikiContextProvider.get();
+        XWikiContext xcontext = this.xcontextProvider.get();
         boolean modified = false;
 
         // Get diffs of the document objects
         List<List<ObjectDiff>> documentObjectDiff =
-            document.getObjectDiff(document.getOriginalDocument(), document, context);
+            document.getObjectDiff(document.getOriginalDocument(), document, xcontext);
 
         // Go through every object that has been modified
         for (List<ObjectDiff> objectDiffs : documentObjectDiff) {
             // Go through every property modified
             for (ObjectDiff objectDiff : objectDiffs) {
                 if (objectDiff.getPropType().equals(TEXT_AREA)) {
-                    BaseObject object =
-                        document.getXObject(objectDiff.getXClassReference(), objectDiff.getNumber());
-                    TextAreaClass property =
-                        (TextAreaClass) object.getXClass(context).getField(objectDiff.getPropName());
+                    BaseObject object = document.getXObject(objectDiff.getXClassReference(), objectDiff.getNumber());
+                    BaseProperty<?> property = (BaseProperty) object.getField(objectDiff.getPropName());
 
-                    // We only perform normalization if the TextArea contains markup (if it's pure text or velocity
-                    // content we won't know how to parse it anyway!).
-                    if (property.getContentType().equalsIgnoreCase(TextAreaClass.ContentType.WIKI_TEXT.toString())) {
-                        modified |= normalizeDocumentXObject(object, objectDiff.getPropName(), parser, blockRenderer);
-                    }
+                    modified |= normalize(property, parser, blockRenderer);
                 }
             }
         }

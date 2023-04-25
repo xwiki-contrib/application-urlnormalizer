@@ -80,8 +80,8 @@ public class URLNormalizerListener extends AbstractEventListener
         boolean contentDirty = document.isContentDirty();
 
         try {
-            urlNormalizationManager.normalize(document, Arrays.asList(ContentDocumentNormalizer.HINT,
-                ModifiedObjectDocumentNormalizer.HINT));
+            this.urlNormalizationManager.normalize(document,
+                Arrays.asList(ContentDocumentNormalizer.HINT, ModifiedObjectDocumentNormalizer.HINT));
         } catch (NormalizationException e) {
             this.logger.warn("Unable to normalize URLs for document [{}]. Root error [{}]",
                 document.getDocumentReference(), ExceptionUtils.getRootCauseMessage(e));

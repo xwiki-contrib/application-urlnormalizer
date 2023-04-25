@@ -19,12 +19,12 @@
  */
 package org.xwiki.contrib.urlnormalizer.internal;
 
-import java.io.Reader;
 import java.util.Collections;
 
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import javax.inject.Named;
+
+import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.xwiki.model.reference.DocumentReference;
@@ -34,20 +34,23 @@ import org.xwiki.rendering.parser.Parser;
 import org.xwiki.rendering.renderer.BlockRenderer;
 import org.xwiki.rendering.renderer.printer.DefaultWikiPrinter;
 import org.xwiki.rendering.renderer.printer.WikiPrinter;
-import org.xwiki.rendering.syntax.Syntax;
-import org.xwiki.test.mockito.MockitoComponentMockingRule;
+import org.xwiki.test.junit5.mockito.ComponentTest;
+import org.xwiki.test.junit5.mockito.InjectMockComponents;
+import org.xwiki.test.junit5.mockito.MockComponent;
 
 import com.xpn.xwiki.XWikiContext;
 import com.xpn.xwiki.doc.XWikiDocument;
 import com.xpn.xwiki.objects.BaseObject;
+import com.xpn.xwiki.objects.BaseProperty;
+import com.xpn.xwiki.objects.LargeStringProperty;
 import com.xpn.xwiki.objects.ObjectDiff;
 import com.xpn.xwiki.objects.classes.BaseClass;
 import com.xpn.xwiki.objects.classes.PropertyClass;
 import com.xpn.xwiki.objects.classes.StaticListClass;
 import com.xpn.xwiki.objects.classes.TextAreaClass;
 
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -55,38 +58,34 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
- * Unit tests for {@link ModifiedObjectDocumentNormalizerTest}.
+ * Validate {@link ModifiedObjectDocumentNormalizer}.
  *
  * @version $Id$
- * @since 1.4
  */
-public class ModifiedObjectDocumentNormalizerTest
+@ComponentTest
+class ModifiedObjectDocumentNormalizerTest
 {
-    @Rule
-    public final MockitoComponentMockingRule<ModifiedObjectDocumentNormalizer> mocker =
-        new MockitoComponentMockingRule<>(ModifiedObjectDocumentNormalizer.class);
+    @InjectMockComponents
+    private ModifiedObjectDocumentNormalizer normalize;
 
-
-    private XWikiContext context;
-
+    @MockComponent
+    @Named("xwiki/2.1")
     private BlockRenderer blockRenderer;
 
+    @MockComponent
+    @Named("xwiki/2.1")
     private Parser parser;
 
+    @MockComponent
+    @Named("link")
     private XDOMNormalizer linkXDOMNormalizer;
 
+    @MockComponent
+    @Named("macro")
     private XDOMNormalizer macroXDOMNormalizer;
 
-    @Before
-    public void setUp() throws Exception
-    {
-        this.parser = this.mocker.registerMockComponent(Parser.class, Syntax.XWIKI_2_1.toIdString());
-        this.blockRenderer = this.mocker.registerMockComponent(BlockRenderer.class, Syntax.XWIKI_2_1.toIdString());
-        this.linkXDOMNormalizer = this.mocker.registerMockComponent(XDOMNormalizer.class, "link");
-        this.macroXDOMNormalizer = this.mocker.registerMockComponent(XDOMNormalizer.class, "macro");
-
-        this.context = mock(XWikiContext.class);
-    }
+    @Mock
+    private XWikiContext context;
 
     /**
      * Associate an {@link ObjectDiff} with a related {@link BaseObject} to the given {@link XWikiDocument} in order to
@@ -95,11 +94,12 @@ public class ModifiedObjectDocumentNormalizerTest
      * @param document the document to mock on
      * @param context a mock of the {@link XWikiContext}
      * @param propType the property type of the XObject ("StaticList", "TextArea", ...)
-     * @param property the property that should be pointed by the {@link ObjectDiff}
+     * @param property the object property
+     * @param propertyClass the property class that should be pointed by the {@link ObjectDiff}
      * @throws Exception if an error happens
      */
     private void mockDocumentXObject(XWikiDocument document, XWikiContext context, String propType,
-        PropertyClass property) throws Exception
+        BaseProperty property, PropertyClass propertyClass) throws Exception
     {
         XWikiDocument originalDocument = mock(XWikiDocument.class);
         when(document.getOriginalDocument()).thenReturn(originalDocument);
@@ -113,35 +113,38 @@ public class ModifiedObjectDocumentNormalizerTest
         when(diff.getNumber()).thenReturn(0);
         when(diff.getXClassReference()).thenReturn(baseObjectClass);
 
+        when(property.getValue()).thenReturn("content");
+        when(property.getPropertyClass(any())).thenReturn(propertyClass);
+
         BaseObject baseObject = mock(BaseObject.class);
+        when(baseObject.getField("propertyName")).thenReturn(property);
         BaseClass baseClass = mock(BaseClass.class);
         when(baseObject.getXClass(any(XWikiContext.class))).thenReturn(baseClass);
-        when(baseClass.getField("propertyName")).thenReturn(property);
-        when(baseObject.getLargeStringValue("propertyName")).thenReturn("content");
 
         when(document.getXObject()).thenReturn(baseObject);
         when(document.getXObject(baseObjectClass, 0)).thenReturn(baseObject);
 
-        when(document.getObjectDiff(eq(originalDocument), eq(document), any(XWikiContext.class))).thenReturn(
-            Collections.singletonList(Collections.singletonList(diff)));
+        when(document.getObjectDiff(eq(originalDocument), eq(document), any(XWikiContext.class)))
+            .thenReturn(Collections.singletonList(Collections.singletonList(diff)));
     }
 
     @Test
-    public void normalizeWithModifiedXProperty() throws Exception
+    void normalizeWithModifiedXProperty() throws Exception
     {
         XDOM xdom = new XDOM(Collections.emptyList());
         XWikiDocument fakeDocument = URLNormalizationHelper.mockXWikiDocument(xdom);
 
         // Create the property that will be inspected
-        TextAreaClass property = mock(TextAreaClass.class);
-        when(property.getContentType()).thenReturn("FullyRenderedText");
+        LargeStringProperty property = mock(LargeStringProperty.class);
+        TextAreaClass propertyClass = mock(TextAreaClass.class);
+        when(propertyClass.isWikiContent()).thenReturn(true);
 
-        mockDocumentXObject(fakeDocument, this.context, "TextArea", property);
+        mockDocumentXObject(fakeDocument, this.context, "TextArea", property, propertyClass);
 
         // Note: the content of the XDOM doesn't matter for the test since all depends on the return value of
         // the called XDOM normalizer.
         XDOM propertyXDOM = new XDOM(Collections.emptyList());
-        when(this.parser.parse(any(Reader.class))).thenReturn(propertyXDOM);
+        when(this.parser.parse(any())).thenReturn(propertyXDOM);
 
         when(this.linkXDOMNormalizer.normalize(propertyXDOM, this.parser, this.blockRenderer)).thenReturn(true);
 
@@ -155,23 +158,24 @@ public class ModifiedObjectDocumentNormalizerTest
             }
         }).when(this.blockRenderer).render(any(Block.class), any(WikiPrinter.class));
 
-        this.mocker.getComponentUnderTest().normalize(fakeDocument, this.parser, this.blockRenderer);
+        this.normalize.normalize(fakeDocument, this.parser, this.blockRenderer);
 
-        verify(fakeDocument.getXObject()).setLargeStringValue("propertyName", "normalizedContent");
+        verify(property).setValue("normalizedContent");
     }
 
     @Test
-    public void normalizeWithModifiedNonTextAreaXProperty() throws Exception
+    void normalizeWithModifiedNonTextAreaXProperty() throws Exception
     {
         XDOM xdom = new XDOM(Collections.emptyList());
         XWikiDocument fakeDocument = URLNormalizationHelper.mockXWikiDocument(xdom);
 
         // Create the property that will be inspected
-        StaticListClass property = mock(StaticListClass.class);
+        LargeStringProperty property = mock(LargeStringProperty.class);
+        StaticListClass propertyClass = mock(StaticListClass.class);
 
-        mockDocumentXObject(fakeDocument, this.context, "StaticList", property);
+        mockDocumentXObject(fakeDocument, this.context, "StaticList", property, propertyClass);
 
-        this.mocker.getComponentUnderTest().normalize(fakeDocument, this.parser, this.blockRenderer);
+        this.normalize.normalize(fakeDocument, this.parser, this.blockRenderer);
 
         verify(this.linkXDOMNormalizer, times(0)).normalize(any(XDOM.class), any(Parser.class),
             any(BlockRenderer.class));

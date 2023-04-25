@@ -20,7 +20,6 @@
 package org.xwiki.contrib.urlnormalizer.internal;
 
 import java.io.StringReader;
-import java.util.List;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -36,11 +35,13 @@ import org.xwiki.rendering.renderer.printer.DefaultWikiPrinter;
 import org.xwiki.rendering.renderer.printer.WikiPrinter;
 
 import com.xpn.xwiki.XWikiContext;
-import com.xpn.xwiki.objects.BaseObject;
+import com.xpn.xwiki.objects.BaseProperty;
+import com.xpn.xwiki.objects.classes.PropertyClass;
+import com.xpn.xwiki.objects.classes.TextAreaClass;
 
 /**
- * Abstract for object document normalizers. These normalizers only look for TextArea properties within the
- * XWiki documents.
+ * Abstract for object document normalizers. These normalizers only look for TextArea properties within the XWiki
+ * documents.
  *
  * @version $Id$
  * @since 1.4
@@ -58,67 +59,49 @@ public abstract class AbstractObjectDocumentNormalizer implements DocumentNormal
     protected XDOMNormalizer macroXDOMNormalizer;
 
     @Inject
-    protected Provider<XWikiContext> xWikiContextProvider;
-
-    /**
-     * Normalize the given XObject properties.
-     *
-     * @param baseObject the object to normalize
-     * @param propertiesToNormalize the list of properties that should be normalized
-     * @param parser the parser to use
-     * @param blockRenderer the block renderer to use
-     * @return true if the object has been modified, false otherwise
-     * @throws NormalizationException if an error happens
-     */
-    protected boolean normalizeDocumentXObject(BaseObject baseObject, List<String> propertiesToNormalize, Parser parser,
-        BlockRenderer blockRenderer) throws NormalizationException
-    {
-        boolean modified = false;
-
-        for (String propertyToNormalize : propertiesToNormalize) {
-            modified |= normalizeDocumentXObject(baseObject, propertyToNormalize, parser, blockRenderer);
-        }
-
-        return modified;
-    }
+    protected Provider<XWikiContext> xcontextProvider;
 
     /**
      * Normalize the given XObject property.
      *
-     * @param baseObject the object to normalize
-     * @param propertyName the property that should be normalized
+     * @param property the property to normalize
      * @param parser the parser to use
      * @param blockRenderer the block renderer to use
      * @return true if the object has been modified, false otherwise
      * @throws NormalizationException if an error happens
      */
-    protected boolean normalizeDocumentXObject(BaseObject baseObject, String propertyName, Parser parser,
-        BlockRenderer blockRenderer) throws NormalizationException
+    protected boolean normalize(BaseProperty<?> property, Parser parser, BlockRenderer blockRenderer)
+        throws NormalizationException
     {
-        boolean modified;
+        XWikiContext xcontext = this.xcontextProvider.get();
 
-        // Get the content of the given XProperty
-        String content = baseObject.getLargeStringValue(propertyName);
+        PropertyClass propertyClass = property.getPropertyClass(xcontext);
 
-        try {
-            XDOM xdom = parser.parse(new StringReader(content));
+        // Only handle textarea properties with wiki content
+        if (propertyClass instanceof TextAreaClass && ((TextAreaClass) propertyClass).isWikiContent()) {
+            String content = (String) property.getValue();
 
-            modified = this.linkXDOMNormalizer.normalize(xdom, parser, blockRenderer);
-            modified |= this.macroXDOMNormalizer.normalize(xdom, parser, blockRenderer);
+            try {
+                XDOM xdom = parser.parse(new StringReader(content));
 
-            if (modified) {
-                WikiPrinter wikiPrinter = new DefaultWikiPrinter();
-                blockRenderer.render(xdom, wikiPrinter);
-                String normalizedContent = wikiPrinter.toString();
-                baseObject.setLargeStringValue(propertyName, normalizedContent);
+                boolean modified = this.linkXDOMNormalizer.normalize(xdom, parser, blockRenderer);
+                modified |= this.macroXDOMNormalizer.normalize(xdom, parser, blockRenderer);
+
+                if (modified) {
+                    WikiPrinter wikiPrinter = new DefaultWikiPrinter();
+                    blockRenderer.render(xdom, wikiPrinter);
+                    String normalizedContent = wikiPrinter.toString();
+                    property.setValue(normalizedContent);
+                }
+
+                return modified;
+            } catch (ParseException e) {
+                // The parser for the syntax of the document may not fit the syntax used in a XProperty.
+                throw new NormalizationException(
+                    String.format("Failed to normalize URLs in TextArea property [%s]", property.getReference()), e);
             }
-        } catch (ParseException e) {
-            // The parser for the syntax of the document may not fit the syntax used in a XProperty.
-            throw new NormalizationException(String.format(
-                "Failed to normalize URLs in TextArea property [%s] in document [%s]",
-                    propertyName, baseObject.getDocumentReference().toString()), e);
         }
 
-        return modified;
+        return false;
     }
 }

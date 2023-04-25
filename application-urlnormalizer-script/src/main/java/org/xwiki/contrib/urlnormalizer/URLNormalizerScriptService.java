@@ -61,11 +61,12 @@ public class URLNormalizerScriptService implements ScriptService
      */
     public URLNormalizationManager getUrlNormalizationManager()
     {
-        if (contextualAuthorizationManager.hasAccess(Right.PROGRAM)) {
-            return urlNormalizationManager;
+        if (this.contextualAuthorizationManager.hasAccess(Right.PROGRAM)) {
+            return this.urlNormalizationManager;
         } else {
-            logger.error("The user [{}] doesn't have the right to access the URLNormalizationManager.",
-                documentAccessBridge.getCurrentUserReference());
+            this.logger.error("The user [{}] doesn't have the right to access the URLNormalizationManager.",
+                this.documentAccessBridge.getCurrentUserReference());
+
             return null;
         }
     }
@@ -79,18 +80,20 @@ public class URLNormalizerScriptService implements ScriptService
      */
     public boolean normalize(DocumentReference documentReference)
     {
-        if (contextualAuthorizationManager.hasAccess(Right.EDIT, documentReference)) {
+        if (this.contextualAuthorizationManager.hasAccess(Right.EDIT, documentReference)) {
             return normalizeInternal(documentReference, true);
         } else {
-            logger.error("The user doesn't have ");
+            this.logger.error("The user [{}] doesn't have the right to normalize the document [{}]",
+                this.documentAccessBridge.getCurrentUserReference(), documentReference);
+
             return false;
         }
     }
 
     /**
      * Normalize the given document. The current user should have edit rights on the document in order to normalize
-     * while creating a new version, and the user should be admin of the document in order to normalize without
-     * creating a new version.
+     * while creating a new version, and the user should be admin of the document in order to normalize without creating
+     * a new version.
      *
      * @param documentReference the document to normalize
      * @param createNewVersion whether a new version of the document should be created
@@ -100,12 +103,15 @@ public class URLNormalizerScriptService implements ScriptService
     {
         if (createNewVersion) {
             return normalize(documentReference);
-        } else if (contextualAuthorizationManager.hasAccess(Right.ADMIN,
-            documentAccessBridge.getCurrentDocumentReference())) {
+        } else if (this.contextualAuthorizationManager.hasAccess(Right.ADMIN,
+            this.documentAccessBridge.getCurrentDocumentReference())) {
+
             return normalizeInternal(documentReference, false);
         } else {
-            logger.error("The user [{}] doesn't have the right to normalize the document [{}] "
-                + "without creating a new version.", documentReference, documentAccessBridge.getCurrentUserReference());
+            this.logger.error(
+                "The user [{}] doesn't have the right to normalize the document [{}] without creating a new version.",
+                this.documentAccessBridge.getCurrentUserReference(), documentReference);
+
             return false;
         }
     }
@@ -120,9 +126,10 @@ public class URLNormalizerScriptService implements ScriptService
     private boolean normalizeInternal(DocumentReference documentReference, boolean createNewVersion)
     {
         try {
-            return urlNormalizationManager.normalize(documentReference, Collections.EMPTY_LIST, createNewVersion);
+            return this.urlNormalizationManager.normalize(documentReference, Collections.emptyList(), createNewVersion);
         } catch (NormalizationException e) {
-            logger.error("Failed to normalize document [{}]", documentReference, e);
+            this.logger.error("Failed to normalize document [{}]", documentReference, e);
+
             return false;
         }
     }
