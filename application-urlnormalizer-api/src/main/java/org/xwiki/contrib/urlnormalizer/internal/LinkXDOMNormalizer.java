@@ -30,6 +30,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.message.BasicNameValuePair;
@@ -45,7 +46,6 @@ import org.xwiki.rendering.listener.reference.DocumentResourceReference;
 import org.xwiki.rendering.listener.reference.ResourceReference;
 import org.xwiki.rendering.parser.Parser;
 import org.xwiki.rendering.renderer.BlockRenderer;
-import org.xwiki.text.StringUtils;
 
 /**
  * Transform local links found in the passed XDOM into wiki links.
@@ -69,10 +69,10 @@ public class LinkXDOMNormalizer implements XDOMNormalizer
     {
         boolean normalized = false;
 
-        List<LinkBlock> linkBlocks = xdom.getBlocks(new ClassBlockMatcher(LinkBlock.class),
-            Block.Axes.DESCENDANT_OR_SELF);
+        List<LinkBlock> linkBlocks =
+            xdom.getBlocks(new ClassBlockMatcher(LinkBlock.class), Block.Axes.DESCENDANT_OR_SELF);
 
-        if (linkBlocks.size() > 0) {
+        if (!linkBlocks.isEmpty()) {
             normalized |= normalize(linkBlocks);
         }
 
@@ -180,12 +180,15 @@ public class LinkXDOMNormalizer implements XDOMNormalizer
     private boolean hasDifferentValue(NameValuePair newParameter, List<NameValuePair> queryStringParameters)
     {
         boolean hasDifferentValue = false;
-        for (NameValuePair pair: queryStringParameters) {
+
+        for (NameValuePair pair : queryStringParameters) {
             if (newParameter.getName().equals(pair.getName()) && !newParameter.getValue().equals(pair.getValue())) {
                 hasDifferentValue = true;
+
                 break;
             }
         }
+
         return hasDifferentValue;
     }
 
@@ -199,6 +202,7 @@ public class LinkXDOMNormalizer implements XDOMNormalizer
             // Should never happen since UTF8 is always available but if it does, fallback to not decoding
             newQueryStringDecoded = newQueryStringEncoded;
         }
+
         return newQueryStringDecoded;
     }
 }
