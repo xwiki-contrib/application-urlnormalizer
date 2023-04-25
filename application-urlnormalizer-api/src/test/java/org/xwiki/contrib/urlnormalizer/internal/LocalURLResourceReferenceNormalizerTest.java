@@ -19,12 +19,11 @@
  */
 package org.xwiki.contrib.urlnormalizer.internal;
 
+import javax.inject.Named;
 import javax.servlet.http.HttpServletRequest;
 
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.xwiki.component.util.DefaultParameterizedType;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.xwiki.container.Container;
 import org.xwiki.container.servlet.ServletRequest;
 import org.xwiki.contrib.urlnormalizer.URLValidator;
@@ -39,182 +38,188 @@ import org.xwiki.resource.ResourceReferenceResolver;
 import org.xwiki.resource.ResourceTypeResolver;
 import org.xwiki.resource.entity.EntityResourceAction;
 import org.xwiki.resource.entity.EntityResourceReference;
-import org.xwiki.test.mockito.MockitoComponentMockingRule;
+import org.xwiki.test.junit5.mockito.ComponentTest;
+import org.xwiki.test.junit5.mockito.InjectMockComponents;
+import org.xwiki.test.junit5.mockito.MockComponent;
 import org.xwiki.url.ExtendedURL;
 
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 /**
- * Unit tests for {@link LocalURLResourceReferenceNormalizer}.
+ * Validate {@link LocalURLResourceReferenceNormalizer}.
  *
  * @version $Id$
  */
-public class LocalURLResourceReferenceNormalizerTest
+@ComponentTest
+class LocalURLResourceReferenceNormalizerTest
 {
-    @Rule
-    public MockitoComponentMockingRule<LocalURLResourceReferenceNormalizer> mocker =
-        new MockitoComponentMockingRule<>(LocalURLResourceReferenceNormalizer.class);
+    @InjectMockComponents
+    private LocalURLResourceReferenceNormalizer normalizer;
 
-    @Before
-    public void setUp() throws Exception
+    @MockComponent
+    private Container container;
+
+    @MockComponent
+    private ResourceTypeResolver<ExtendedURL> typeResolver;
+
+    @MockComponent
+    private ResourceReferenceResolver<ExtendedURL> resolver;
+
+    @MockComponent
+    private URLValidator<ExtendedURL> localURLValidator;
+
+    @MockComponent
+    private URLValidator<EntityResourceReference> actionURLValidator;
+
+    @MockComponent
+    @Named("compactwiki")
+    private EntityReferenceSerializer<String> compactwikiSerializer;
+
+    @BeforeEach
+    public void beforeEach() throws Exception
     {
-        Container container = this.mocker.getInstance(Container.class);
         ServletRequest request = mock(ServletRequest.class);
-        when(container.getRequest()).thenReturn(request);
+        when(this.container.getRequest()).thenReturn(request);
         HttpServletRequest httpRequest = mock(HttpServletRequest.class);
         when(request.getHttpServletRequest()).thenReturn(httpRequest);
         when(httpRequest.getContextPath()).thenReturn("xwiki");
     }
 
     @Test
-    public void normalizeWhenURLPointsToWikiLink() throws Exception
+    void normalizeWhenURLPointsToWikiLink() throws Exception
     {
-        ResourceTypeResolver<ExtendedURL> typeResolver = this.mocker.getInstance(
-            new DefaultParameterizedType(null, ResourceTypeResolver.class, ExtendedURL.class));
         org.xwiki.resource.ResourceType type = new org.xwiki.resource.ResourceType("entity");
-        when(typeResolver.resolve(any(ExtendedURL.class), any())).thenReturn(type);
+        when(this.typeResolver.resolve(any(ExtendedURL.class), any())).thenReturn(type);
 
-        ResourceReferenceResolver<ExtendedURL> resolver = this.mocker.getInstance(
-            new DefaultParameterizedType(null, ResourceReferenceResolver.class, ExtendedURL.class));
         EntityReference entityReference = new DocumentReference("wiki", "A", "B");
         EntityResourceReference err = new EntityResourceReference(entityReference, new EntityResourceAction("view"));
-        when(resolver.resolve(any(ExtendedURL.class), eq(type), any())).thenReturn(err);
+        when(this.resolver.resolve(any(ExtendedURL.class), eq(type), any())).thenReturn(err);
 
-        URLValidator<ExtendedURL> localURLValidator = this.mocker.getInstance(
-            new DefaultParameterizedType(null, URLValidator.class, ExtendedURL.class));
-        when(localURLValidator.validate(any(ExtendedURL.class))).thenReturn(true);
+        when(this.localURLValidator.validate(any(ExtendedURL.class))).thenReturn(true);
 
-        URLValidator<EntityResourceReference> viewURLValidator = this.mocker.getInstance(
-            new DefaultParameterizedType(null, URLValidator.class, EntityResourceReference.class));
-        when(viewURLValidator.validate(err)).thenReturn(true);
+        when(this.actionURLValidator.validate(err)).thenReturn(true);
 
-        EntityReferenceSerializer<String> serializer = this.mocker.getInstance(
-        new DefaultParameterizedType(null, EntityReferenceSerializer.class, String.class), "compactwiki");
-        when(serializer.serialize(entityReference)).thenReturn("A.B");
+        when(this.compactwikiSerializer.serialize(entityReference)).thenReturn("A.B");
 
         ResourceReference reference =
             new ResourceReference("http://my.some.domain/xwiki/bin/view/A/B", ResourceType.URL);
-        ResourceReference normalizedReference = this.mocker.getComponentUnderTest().normalize(reference);
+        ResourceReference normalizedReference = this.normalizer.normalize(reference);
 
+        assertEquals(ResourceType.DOCUMENT, normalizedReference.getType());
         assertEquals("A.B", normalizedReference.getReference());
     }
 
     @Test
-    public void normalizeWhenURLPointsToWikiLinkWithQueryString() throws Exception
+    void normalizeWhenURLContainsAReference() throws Exception
     {
-        ResourceTypeResolver<ExtendedURL> typeResolver = this.mocker.getInstance(
-            new DefaultParameterizedType(null, ResourceTypeResolver.class, ExtendedURL.class));
         org.xwiki.resource.ResourceType type = new org.xwiki.resource.ResourceType("entity");
-        when(typeResolver.resolve(any(ExtendedURL.class), any())).thenReturn(type);
+        when(this.typeResolver.resolve(any(ExtendedURL.class), any())).thenReturn(type);
 
-        ResourceReferenceResolver<ExtendedURL> resolver = this.mocker.getInstance(
-            new DefaultParameterizedType(null, ResourceReferenceResolver.class, ExtendedURL.class));
+        EntityReference entityReference = new DocumentReference("wiki", "A", "B");
+        EntityResourceReference err = new EntityResourceReference(entityReference, new EntityResourceAction("view"));
+        when(this.resolver.resolve(any(ExtendedURL.class), eq(type), any())).thenReturn(err);
+
+        when(this.localURLValidator.validate(any(ExtendedURL.class))).thenReturn(true);
+
+        when(this.actionURLValidator.validate(err)).thenReturn(true);
+
+        when(this.compactwikiSerializer.serialize(entityReference)).thenReturn("A.B");
+
+        ResourceReference reference =
+            new ResourceReference("http://my.some.domain/xwiki/bin/view/A/B#reference", ResourceType.URL);
+        ResourceReference normalizedReference = this.normalizer.normalize(reference);
+
+        assertEquals(ResourceType.URL, normalizedReference.getType());
+        assertEquals("http://my.some.domain/xwiki/bin/view/A/B#reference", normalizedReference.getReference());
+    }
+
+    @Test
+    void normalizeWhenURLPointsToWikiLinkWithQueryString() throws Exception
+    {
+        org.xwiki.resource.ResourceType type = new org.xwiki.resource.ResourceType("entity");
+        when(this.typeResolver.resolve(any(ExtendedURL.class), any())).thenReturn(type);
+
         EntityReference entityReference = new DocumentReference("wiki", "A", "B");
         EntityResourceReference err = new EntityResourceReference(entityReference, new EntityResourceAction("view"));
         err.addParameter("a", "b");
-        when(resolver.resolve(any(ExtendedURL.class), eq(type), any())).thenReturn(err);
+        when(this.resolver.resolve(any(ExtendedURL.class), eq(type), any())).thenReturn(err);
 
-        URLValidator<ExtendedURL> localURLValidator = this.mocker.getInstance(
-            new DefaultParameterizedType(null, URLValidator.class, ExtendedURL.class));
-        when(localURLValidator.validate(any(ExtendedURL.class))).thenReturn(true);
+        when(this.localURLValidator.validate(any(ExtendedURL.class))).thenReturn(true);
 
-        URLValidator<EntityResourceReference> viewURLValidator = this.mocker.getInstance(
-            new DefaultParameterizedType(null, URLValidator.class, EntityResourceReference.class));
-        when(viewURLValidator.validate(err)).thenReturn(true);
+        when(this.actionURLValidator.validate(err)).thenReturn(true);
 
-        EntityReferenceSerializer<String> serializer = this.mocker.getInstance(
-            new DefaultParameterizedType(null, EntityReferenceSerializer.class, String.class), "compactwiki");
-        when(serializer.serialize(entityReference)).thenReturn("A.B");
+        when(this.compactwikiSerializer.serialize(entityReference)).thenReturn("A.B");
 
         ResourceReference reference =
             new ResourceReference("http://my.some.domain/xwiki/bin/view/A/B", ResourceType.URL);
         reference.setParameter("a", "b");
-        ResourceReference normalizedReference = this.mocker.getComponentUnderTest().normalize(reference);
+        ResourceReference normalizedReference = this.normalizer.normalize(reference);
 
+        assertEquals(ResourceType.DOCUMENT, normalizedReference.getType());
         assertEquals("A.B", normalizedReference.getReference());
         assertEquals("b", normalizedReference.getParameter("a"));
     }
 
     @Test
-    public void normalizeWhenURLPointsToWikiLinkButNotView() throws Exception
+    void normalizeWhenURLPointsToWikiLinkButNotView() throws Exception
     {
-        ResourceTypeResolver<ExtendedURL> typeResolver = this.mocker.getInstance(
-            new DefaultParameterizedType(null, ResourceTypeResolver.class, ExtendedURL.class));
         org.xwiki.resource.ResourceType type = new org.xwiki.resource.ResourceType("entity");
-        when(typeResolver.resolve(any(ExtendedURL.class), any())).thenReturn(type);
+        when(this.typeResolver.resolve(any(ExtendedURL.class), any())).thenReturn(type);
 
-        ResourceReferenceResolver<ExtendedURL> resolver = this.mocker.getInstance(
-            new DefaultParameterizedType(null, ResourceReferenceResolver.class, ExtendedURL.class));
         EntityReference entityReference = new DocumentReference("wiki", "A", "B");
         EntityResourceReference err = new EntityResourceReference(entityReference, new EntityResourceAction("view"));
-        when(resolver.resolve(any(ExtendedURL.class), eq(type), any())).thenReturn(err);
+        when(this.resolver.resolve(any(ExtendedURL.class), eq(type), any())).thenReturn(err);
 
-        URLValidator<ExtendedURL> localURLValidator = this.mocker.getInstance(
-            new DefaultParameterizedType(null, URLValidator.class, ExtendedURL.class));
-        when(localURLValidator.validate(any(ExtendedURL.class))).thenReturn(true);
+        when(this.localURLValidator.validate(any(ExtendedURL.class))).thenReturn(true);
 
-        URLValidator<EntityResourceReference> viewURLValidator = this.mocker.getInstance(
-            new DefaultParameterizedType(null, URLValidator.class, EntityResourceReference.class));
-        when(viewURLValidator.validate(err)).thenReturn(false);
+        when(this.actionURLValidator.validate(err)).thenReturn(false);
 
         ResourceReference reference =
             new ResourceReference("http://my.some.domain/xwiki/bin/view/A/B", ResourceType.URL);
-        ResourceReference normalizedReference = this.mocker.getComponentUnderTest().normalize(reference);
+        ResourceReference normalizedReference = this.normalizer.normalize(reference);
 
         assertEquals("http://my.some.domain/xwiki/bin/view/A/B", normalizedReference.getReference());
     }
 
     @Test
-    public void normalizeWhenUnsupportedResourceType() throws Exception
+    void normalizeWhenUnsupportedResourceType() throws Exception
     {
-        ResourceTypeResolver<ExtendedURL> typeResolver = this.mocker.getInstance(
-            new DefaultParameterizedType(null, ResourceTypeResolver.class, ExtendedURL.class));
-        when(typeResolver.resolve(any(ExtendedURL.class), any())).thenThrow(new CreateResourceTypeException("error"));
+        when(this.typeResolver.resolve(any(ExtendedURL.class), any())).thenThrow(new CreateResourceTypeException("error"));
 
         ResourceReference reference =
             new ResourceReference("http://my.some.domain/xwiki/bin/view/A/B", ResourceType.URL);
-        ResourceReference normalizedReference = this.mocker.getComponentUnderTest().normalize(reference);
+        ResourceReference normalizedReference = this.normalizer.normalize(reference);
 
         assertEquals("http://my.some.domain/xwiki/bin/view/A/B", normalizedReference.getReference());
     }
 
     @Test
-    public void normalizeDownloadURL() throws Exception
+    void normalizeDownloadURL() throws Exception
     {
-        ResourceTypeResolver<ExtendedURL> typeResolver = this.mocker.getInstance(
-            new DefaultParameterizedType(null, ResourceTypeResolver.class, ExtendedURL.class));
         org.xwiki.resource.ResourceType type = new org.xwiki.resource.ResourceType("entity");
-        when(typeResolver.resolve(any(ExtendedURL.class), any())).thenReturn(type);
+        when(this.typeResolver.resolve(any(ExtendedURL.class), any())).thenReturn(type);
 
-        ResourceReferenceResolver<ExtendedURL> resolver = this.mocker.getInstance(
-            new DefaultParameterizedType(null, ResourceReferenceResolver.class, ExtendedURL.class));
         EntityReference entityReference =
             new AttachmentReference("attachment", new DocumentReference("wiki", "A", "B"));
         EntityResourceReference err =
             new EntityResourceReference(entityReference, new EntityResourceAction("download"));
-        when(resolver.resolve(any(ExtendedURL.class), eq(type), any())).thenReturn(err);
+        when(this.resolver.resolve(any(ExtendedURL.class), eq(type), any())).thenReturn(err);
 
-        URLValidator<ExtendedURL> localURLValidator = this.mocker.getInstance(
-            new DefaultParameterizedType(null, URLValidator.class, ExtendedURL.class));
-        when(localURLValidator.validate(any(ExtendedURL.class))).thenReturn(true);
+        when(this.localURLValidator.validate(any(ExtendedURL.class))).thenReturn(true);
 
-        URLValidator<EntityResourceReference> actionURLValidator = this.mocker.getInstance(
-            new DefaultParameterizedType(null, URLValidator.class, EntityResourceReference.class));
-        when(actionURLValidator.validate(err)).thenReturn(true);
+        when(this.actionURLValidator.validate(err)).thenReturn(true);
 
-        EntityReferenceSerializer<String> serializer = this.mocker.getInstance(
-            new DefaultParameterizedType(null, EntityReferenceSerializer.class, String.class), "compactwiki");
-        when(serializer.serialize(entityReference)).thenReturn("A.B@attachment");
+        when(this.compactwikiSerializer.serialize(entityReference)).thenReturn("A.B@attachment");
 
         ResourceReference reference =
             new ResourceReference("http://my.some.domain/xwiki/bin/download/A/B/attachment", ResourceType.URL);
-        ResourceReference normalizedReference = this.mocker.getComponentUnderTest().normalize(reference);
+        ResourceReference normalizedReference = this.normalizer.normalize(reference);
 
-        assertEquals("A.B@attachment", normalizedReference.getReference());
         assertEquals(ResourceType.ATTACHMENT, normalizedReference.getType());
+        assertEquals("A.B@attachment", normalizedReference.getReference());
     }
 }

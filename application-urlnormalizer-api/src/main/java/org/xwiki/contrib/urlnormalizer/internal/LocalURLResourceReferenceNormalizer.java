@@ -28,7 +28,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
-import org.apache.commons.lang.exception.ExceptionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.container.Container;
@@ -84,14 +84,15 @@ public class LocalURLResourceReferenceNormalizer implements ResourceReferenceNor
 
         ResourceReference normalizedReference = reference;
         try {
-            if (reference.getType().equals(ResourceType.URL)) {
-                // Create a  ResourceReference object from the Platform URL module
-                // TODO: In the future we'll need to merge the ResourceReference from Rendering with the one from
-                // Platform
-                if (this.container.getRequest() instanceof ServletRequest) {
+            if (reference.getType().equals(ResourceType.URL) && this.container.getRequest() instanceof ServletRequest) {
+                URL referenceURL = new URL(reference.getReference());
+
+                // Ignore URLs with a reference since they are not supported right now
+                // FIXME: remove when https://jira.xwiki.org/browse/URLNORMALZ-11 is fixed
+                if (StringUtils.isEmpty(referenceURL.getRef())) {
                     ServletRequest servletRequest = (ServletRequest) this.container.getRequest();
-                    ExtendedURL extendedURL = new ExtendedURL(new URL(reference.getReference()),
-                        servletRequest.getHttpServletRequest().getContextPath());
+                    ExtendedURL extendedURL =
+                        new ExtendedURL(referenceURL, servletRequest.getHttpServletRequest().getContextPath());
                     if (this.localURLValidator.validate(extendedURL)) {
                         normalizedReference = resolveReference(extendedURL, reference);
                     }
@@ -102,8 +103,7 @@ public class LocalURLResourceReferenceNormalizer implements ResourceReferenceNor
             // the URL parser we use will generate a CreateResourceReferenceException if the URL to parse is not a
             // local URL. Thus we need to ignore all errors in order to avoid spurious logs for the user.
             // That's why we log it only at debug level.
-            this.logger.debug("Failed to normalize URL [{}] into a wiki link. Error [{}]",
-                reference.getReference(), ExceptionUtils.getRootCauseMessage(e));
+            this.logger.debug("Failed to normalize URL [{}] into a wiki link", reference.getReference(), e);
         }
 
         return normalizedReference;
@@ -113,11 +113,12 @@ public class LocalURLResourceReferenceNormalizer implements ResourceReferenceNor
         throws Exception
     {
         ResourceReference normalizedReference = originalReference;
-        org.xwiki.resource.ResourceType type =
-            this.typeResolver.resolve(extendedURL, Collections.emptyMap());
+
+        org.xwiki.resource.ResourceType type = this.typeResolver.resolve(extendedURL, Collections.emptyMap());
         if (type.getId().equals("entity") || type.getId().equals("wiki")) {
             EntityResourceReference err =
                 (EntityResourceReference) this.resolver.resolve(extendedURL, type, Collections.emptyMap());
+
             // At this point we're sure that the URL is pointing to a wiki link but we still need to verify that we
             // point to a URL for a supported action (view or download) since wiki links only support some actions ATM.
             if (this.actionURLValidator.validate(err)) {
@@ -129,8 +130,8 @@ public class LocalURLResourceReferenceNormalizer implements ResourceReferenceNor
                     referenceResourceType = ResourceType.DOCUMENT;
                 }
 
-                normalizedReference = new ResourceReference(this.serializer.serialize(err.getEntityReference()),
-                    referenceResourceType);
+                normalizedReference =
+                    new ResourceReference(this.serializer.serialize(err.getEntityReference()), referenceResourceType);
 
                 // Handle query string parameters.
                 //
@@ -139,7 +140,7 @@ public class LocalURLResourceReferenceNormalizer implements ResourceReferenceNor
                 // Also note that the original ResourceReference could theoretically have existing parameters that we
                 // should keep. However in practice this is not possible since there's no markup syntax for that and
                 // thus we can safely ignore it.
-                for (Map.Entry<String, List<String>> parameter: err.getParameters().entrySet()) {
+                for (Map.Entry<String, List<String>> parameter : err.getParameters().entrySet()) {
                     // Note: EntityResourceReference supports having several parameters with the same name but
                     // ResourceReference doesn't.
                     // However since our original input is a ResourceReference, there's no risk of having several
@@ -157,6 +158,7 @@ public class LocalURLResourceReferenceNormalizer implements ResourceReferenceNor
                 }
             }
         }
+
         return normalizedReference;
     }
 }
