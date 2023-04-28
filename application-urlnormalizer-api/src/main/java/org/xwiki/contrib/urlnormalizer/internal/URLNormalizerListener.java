@@ -73,7 +73,7 @@ public class URLNormalizerListener extends AbstractEventListener
         XWikiDocument document = (XWikiDocument) source;
 
         // Save the metaDataDirty and contentDirty variables so that, in the event where the document save is called
-        // by a script that doesn't want to create new verisons in the document history, we don't screw the script
+        // by a script that doesn't want to create new versions in the document history, we don't screw the script
         // behavior.
         // TODO: In the future, make this a customizable property of the application
         boolean metaDataDirty = document.isMetaDataDirty();
