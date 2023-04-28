@@ -19,53 +19,54 @@
  */
 package org.xwiki.contrib.urlnormalizer.test.ui;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.openqa.selenium.By;
-import org.xwiki.test.ui.AbstractTest;
+import org.xwiki.test.docker.junit5.TestReference;
+import org.xwiki.test.docker.junit5.UITest;
+import org.xwiki.test.ui.TestUtils;
 import org.xwiki.test.ui.po.ViewPage;
 import org.xwiki.test.ui.po.editor.ObjectEditPage;
 import org.xwiki.test.ui.po.editor.ObjectEditPane;
 import org.xwiki.test.ui.po.editor.WikiEditPage;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 
 /**
  * Test if a document and its XObjects is correctly normalized.
  *
  * @version $Id$
- * @since 1.1.1
  */
-public class URLNormalizerTest extends AbstractTest
+@UITest
+class URLNormalizerIT
 {
+    private String base;
+    
     private String absoluteInternalUrl;
 
     private String escapedAbsoluteInternalUrl;
 
     private String absoluteExternalUrl;
 
-    @Before
-    public void setUp() throws Exception
+    @BeforeEach
+    public void setUp(TestUtils setup, TestReference testReference) throws Exception
     {
-        getUtil().loginAsSuperAdmin();
-        getUtil().createUserAndLogin(getTestClassName(), "password", "usertype", "Advanced");
+        setup.loginAsSuperAdmin();
 
-        getUtil().deletePage(getTestClassName(), getTestMethodName());
-    }
+        setup.deletePage(testReference);
 
-    @Before
-    public void generateURLs() throws Exception
-    {
-        absoluteInternalUrl = String.format("%sbin/view/Main", getUtil().getBaseURL());
+        this.base = "http://localhost:8080/xwiki";
 
-        escapedAbsoluteInternalUrl =
-            String.format("%sbin/view/Main", getUtil().getBaseURL().replaceAll("://", ":~~/~~/"));
+        this.absoluteInternalUrl = this.base + "/view/Main";
 
-        absoluteExternalUrl = "http://example.org/some/other/random/link";
+        this.escapedAbsoluteInternalUrl = this.absoluteInternalUrl.replaceAll("://", ":~~/~~/");
+
+        this.absoluteExternalUrl = "http://example.org/some/other/random/link";
     }
 
     @Test
-    public void onDocumentUpdate() throws Exception
+    void onDocumentUpdate(TestUtils setup, TestReference testReference) throws Exception
     {
         // We want the test to be as fast as possible, therefore, we’ll test every link combination in one single page.
         StringBuilder content = new StringBuilder();
@@ -100,12 +101,11 @@ public class URLNormalizerTest extends AbstractTest
         expectedResultBuilder.append("[[Main page>>doc:Main.WebHome]]\n");
 
         // Test for a download wiki link
-        content
-            .append(String.format("[[Attachment>>%sbin/download/Main/WebHome/image.png]]\n", getUtil().getBaseURL()));
+        content.append(String.format("[[Attachment>>%sbin/download/Main/WebHome/image.png]]\n", this.base));
         expectedResultBuilder.append("[[Attachment>>attach:Main.WebHome@image.png]]\n");
 
         // Test for a non-view wiki link
-        String nonViewWikiLink = String.format("%sbin/edit/Main", getUtil().getBaseURL());
+        String nonViewWikiLink = String.format("%sbin/edit/Main", this.base);
         content.append(String.format("[[Label>>%s]]\n", nonViewWikiLink));
         expectedResultBuilder.append(String.format("[[Label>>%s]]\n", nonViewWikiLink));
 
@@ -117,7 +117,7 @@ public class URLNormalizerTest extends AbstractTest
         content.append(String.format("\n{{html wiki='true'}}[[Label>>%s]]{{/html}}", absoluteInternalUrl));
         expectedResultBuilder.append("\n{{html wiki=\"true\"}}\n[[Label>>doc:Main.WebHome]]\n{{/html}}");
 
-        ViewPage page = getUtil().createPage(getTestClassName(), getTestMethodName(), "", "URL Normalizer Tests");
+        ViewPage page = setup.createPage(testReference, "", "URL Normalizer Tests");
 
         WikiEditPage editPage = page.editWiki();
 
@@ -125,8 +125,7 @@ public class URLNormalizerTest extends AbstractTest
         editPage.clickSaveAndView(true);
 
         // We add an xproperty to verify that it's also normalized fine
-        getUtil().addObject(getTestClassName(), getTestMethodName(), "XWiki.XWikiComments", "comment",
-            absoluteInternalUrl);
+        setup.addObject(testReference, "XWiki.XWikiComments", "comment", absoluteInternalUrl);
 
         // Return to the edit page
         editPage = (new ViewPage()).editWiki();

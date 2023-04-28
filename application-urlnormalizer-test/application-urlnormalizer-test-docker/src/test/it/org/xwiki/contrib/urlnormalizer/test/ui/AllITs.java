@@ -19,16 +19,22 @@
  */
 package org.xwiki.contrib.urlnormalizer.test.ui;
 
-import org.junit.runner.RunWith;
-import org.xwiki.test.ui.PageObjectSuite;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.xwiki.test.docker.junit5.UITest;
 
 /**
- * Runs all functional tests found in the classpath. This allows to start/stop XWiki only once.
+ * All the UI tests.
  *
  * @version $Id$
- * @since 1.1.1
  */
-@RunWith(PageObjectSuite.class)
-public class AllTests
+@UITest
+public class AllITs
 {
+    @Nested
+    @DisplayName("URL Normalizer")
+    class NestedURLNormalizerTest extends URLNormalizerIT
+    {
+    }
+
 }
