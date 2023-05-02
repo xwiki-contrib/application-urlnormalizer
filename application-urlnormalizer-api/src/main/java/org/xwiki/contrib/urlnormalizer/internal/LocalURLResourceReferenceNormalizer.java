@@ -85,7 +85,11 @@ public class LocalURLResourceReferenceNormalizer implements ResourceReferenceNor
         ResourceReference normalizedReference = reference;
         try {
             if (reference.getType().equals(ResourceType.URL) && this.container.getRequest() instanceof ServletRequest) {
-                URL referenceURL = new URL(reference.getReference());
+                String referenceString = reference.getReference();
+
+                // TODO: check a regex based configured mapping
+
+                URL referenceURL = new URL(referenceString);
 
                 // Ignore URLs with a reference since they are not supported right now
                 // FIXME: remove when https://jira.xwiki.org/browse/URLNORMALZ-11 is fixed

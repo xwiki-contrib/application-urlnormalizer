@@ -21,18 +21,21 @@ package org.xwiki.contrib.urlnormalizer.internal;
 
 import java.net.URL;
 
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.xwiki.test.mockito.MockitoComponentMockingRule;
+import javax.inject.Named;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.xwiki.configuration.ConfigurationSource;
+import org.xwiki.test.junit5.mockito.ComponentTest;
+import org.xwiki.test.junit5.mockito.InjectMockComponents;
+import org.xwiki.test.junit5.mockito.MockComponent;
 import org.xwiki.url.ExtendedURL;
 import org.xwiki.url.URLConfiguration;
-import org.xwiki.url.internal.standard.StandardURLConfiguration;
 import org.xwiki.wiki.descriptor.WikiDescriptor;
 import org.xwiki.wiki.descriptor.WikiDescriptorManager;
 
-import static junit.framework.TestCase.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -41,75 +44,122 @@ import static org.mockito.Mockito.when;
  *
  * @version $Id:$
  */
-public class LocalURLValidatorTest
+@ComponentTest
+class LocalURLValidatorTest
 {
-    @Rule
-    public MockitoComponentMockingRule<LocalURLValidator> mocker =
-        new MockitoComponentMockingRule<>(LocalURLValidator.class);
+    @MockComponent
+    private URLConfiguration urlConfiguration;
 
-    @Before
-    public void setUp() throws Exception
+    @MockComponent
+    private WikiDescriptorManager wikiDescriptorManager;
+
+    @MockComponent
+    @Named("xwikicfg")
+    private ConfigurationSource configurationSource;
+
+    @InjectMockComponents
+    private LocalURLValidator validator;
+
+    @BeforeEach
+    public void beforeEach() throws Exception
     {
-        URLConfiguration urlConfiguration = this.mocker.getInstance(URLConfiguration.class);
-        when(urlConfiguration.getURLFormatId()).thenReturn("standard");
+        when(this.urlConfiguration.getURLFormatId()).thenReturn("standard");
     }
 
     @Test
-    public void validateLocalURLInDomainBased() throws Exception
+    void validateWithUnknownDomain() throws Exception
     {
-        StandardURLConfiguration standardURLConfiguration = this.mocker.getInstance(StandardURLConfiguration.class);
-        when(standardURLConfiguration.isPathBasedMultiWiki()).thenReturn(false);
+        assertFalse(
+            this.validator.validate(new ExtendedURL(new URL("https://unknowndomain/xwiki/bin/view/A/B"), "xwiki")));
+        assertFalse(
+            this.validator.validate(new ExtendedURL(new URL("https://unknowndomain:443/xwiki/bin/view/A/B"), "xwiki")));
+        assertFalse(
+            this.validator.validate(new ExtendedURL(new URL("http://unknowndomain/xwiki/bin/view/A/B"), "xwiki")));
+    }
 
-        WikiDescriptorManager wikiDescriptorManager = this.mocker.getInstance(WikiDescriptorManager.class);
+    @Test
+    void validateWithDescriptorWithSecure() throws Exception
+    {
         WikiDescriptor wikiDescriptor = mock(WikiDescriptor.class);
-        when(wikiDescriptorManager.getByAlias("my.some.domain")).thenReturn(wikiDescriptor);
+        when(wikiDescriptor.getPort()).thenReturn(-1);
+        when(wikiDescriptor.isSecure()).thenReturn(true);
+        when(this.wikiDescriptorManager.getByAlias("domain")).thenReturn(wikiDescriptor);
 
-        ExtendedURL url = new ExtendedURL(new URL("http://my.some.domain/xwiki/bin/view/A/B"), "xwiki");
-        assertTrue(this.mocker.getComponentUnderTest().validate(url));
+        assertTrue(this.validator.validate(new ExtendedURL(new URL("https://domain/xwiki/bin/view/A/B"), "xwiki")));
+        assertTrue(this.validator.validate(new ExtendedURL(new URL("https://domain:443/xwiki/bin/view/A/B"), "xwiki")));
+        assertFalse(this.validator.validate(new ExtendedURL(new URL("http://domain/xwiki/bin/view/A/B"), "xwiki")));
     }
 
     @Test
-    public void validateLocalURLInPathBased() throws Exception
+    void validateWithDescriptorWithNotSecure() throws Exception
     {
-        StandardURLConfiguration standardURLConfiguration = this.mocker.getInstance(StandardURLConfiguration.class);
-        when(standardURLConfiguration.isPathBasedMultiWiki()).thenReturn(true);
-
-        WikiDescriptorManager wikiDescriptorManager = this.mocker.getInstance(WikiDescriptorManager.class);
         WikiDescriptor wikiDescriptor = mock(WikiDescriptor.class);
-        when(wikiDescriptorManager.getByAlias("mywiki")).thenReturn(wikiDescriptor);
-        when(wikiDescriptorManager.getCurrentWikiId()).thenReturn("currentwiki");
-        when(wikiDescriptorManager.getMainWikiId()).thenReturn("mainwiki");
+        when(wikiDescriptor.getPort()).thenReturn(-1);
+        when(wikiDescriptor.isSecure()).thenReturn(false);
+        when(this.wikiDescriptorManager.getByAlias("domain")).thenReturn(wikiDescriptor);
 
-        ExtendedURL url = new ExtendedURL(new URL("http://whatever/xwiki/wiki/mywiki/view/A/B"), "xwiki");
-        assertTrue(this.mocker.getComponentUnderTest().validate(url));
+        assertTrue(this.validator.validate(new ExtendedURL(new URL("http://domain/xwiki/bin/view/A/B"), "xwiki")));
+        assertTrue(this.validator.validate(new ExtendedURL(new URL("http://domain:80/xwiki/bin/view/A/B"), "xwiki")));
+        assertFalse(this.validator.validate(new ExtendedURL(new URL("https://domain/xwiki/bin/view/A/B"), "xwiki")));
     }
 
     @Test
-    public void validateLocalURLInPathBasedAndMainWiki() throws Exception
+    void validateWithDescriptorWithCustomPort() throws Exception
     {
-        StandardURLConfiguration standardURLConfiguration = this.mocker.getInstance(StandardURLConfiguration.class);
-        when(standardURLConfiguration.isPathBasedMultiWiki()).thenReturn(true);
-
-        WikiDescriptorManager wikiDescriptorManager = this.mocker.getInstance(WikiDescriptorManager.class);
         WikiDescriptor wikiDescriptor = mock(WikiDescriptor.class);
-        when(wikiDescriptorManager.getByAlias("domain")).thenReturn(wikiDescriptor);
-        when(wikiDescriptorManager.getCurrentWikiId()).thenReturn("mainwiki");
-        when(wikiDescriptorManager.getMainWikiId()).thenReturn("mainwiki");
+        when(wikiDescriptor.getPort()).thenReturn(8080);
+        when(this.wikiDescriptorManager.getByAlias("domain")).thenReturn(wikiDescriptor);
 
-        ExtendedURL url = new ExtendedURL(new URL("http://domain/xwiki/wiki/mywiki/view/A/B"), "xwiki");
-        assertTrue(this.mocker.getComponentUnderTest().validate(url));
+        assertTrue(
+            this.validator.validate(new ExtendedURL(new URL("https://domain:8080/xwiki/bin/view/A/B"), "xwiki")));
+        assertTrue(this.validator.validate(new ExtendedURL(new URL("http://domain:8080/xwiki/bin/view/A/B"), "xwiki")));
+        assertFalse(this.validator.validate(new ExtendedURL(new URL("https://domain/xwiki/bin/view/A/B"), "xwiki")));
+        assertFalse(this.validator.validate(new ExtendedURL(new URL("http://domain/xwiki/bin/view/A/B"), "xwiki")));
     }
 
     @Test
-    public void validateNonLocalURLInDomainBased() throws Exception
+    void validateWithConfiguredHomeWithDefaultHTTPPort() throws Exception
     {
-        StandardURLConfiguration standardURLConfiguration = this.mocker.getInstance(StandardURLConfiguration.class);
-        when(standardURLConfiguration.isPathBasedMultiWiki()).thenReturn(false);
+        when(this.configurationSource.getProperty("xwiki.home")).thenReturn("http://domain/xwiki/bin/view/A/B");
 
-        WikiDescriptorManager wikiDescriptorManager = this.mocker.getInstance(WikiDescriptorManager.class);
-        when(wikiDescriptorManager.getByAlias("some.other.domain")).thenReturn(null);
+        assertTrue(
+            this.validator.validate(new ExtendedURL(new URL("http://domain/xwiki/bin/view/A/B"), "xwiki")));
+        assertTrue(
+            this.validator.validate(new ExtendedURL(new URL("http://domain:80/xwiki/bin/view/A/B"), "xwiki")));
 
-        ExtendedURL url = new ExtendedURL(new URL("http://some.other.domain/xwiki/bin/view/A/B"), "xwiki");
-        assertFalse(this.mocker.getComponentUnderTest().validate(url));
+        assertFalse(
+            this.validator.validate(new ExtendedURL(new URL("http://domain:82/xwiki/bin/view/A/B"), "xwiki")));
+        assertFalse(
+            this.validator.validate(new ExtendedURL(new URL("http://otherdomain/xwiki/bin/view/A/B"), "xwiki")));
+    }
+
+    @Test
+    void validateWithConfiguredHomeWithDefaultHTTPSPort() throws Exception
+    {
+        when(this.configurationSource.getProperty("xwiki.home")).thenReturn("https://domain/xwiki/bin/view/A/B");
+
+        assertTrue(
+            this.validator.validate(new ExtendedURL(new URL("https://domain/xwiki/bin/view/A/B"), "xwiki")));
+        assertTrue(
+            this.validator.validate(new ExtendedURL(new URL("https://domain:443/xwiki/bin/view/A/B"), "xwiki")));
+
+        assertFalse(
+            this.validator.validate(new ExtendedURL(new URL("https://domain:450/xwiki/bin/view/A/B"), "xwiki")));
+        assertFalse(
+            this.validator.validate(new ExtendedURL(new URL("https://otherdomain/xwiki/bin/view/A/B"), "xwiki")));
+    }
+
+    @Test
+    void validateWithConfiguredHomeWithCustomPort() throws Exception
+    {
+        when(this.configurationSource.getProperty("xwiki.home")).thenReturn("https://domain:8080/xwiki/bin/view/A/B");
+
+        assertTrue(
+            this.validator.validate(new ExtendedURL(new URL("http://domain:8080/xwiki/bin/view/A/B"), "xwiki")));
+
+        assertFalse(
+            this.validator.validate(new ExtendedURL(new URL("http://domain/xwiki/bin/view/A/B"), "xwiki")));
+        assertFalse(
+            this.validator.validate(new ExtendedURL(new URL("http://otherdomain:8080/xwiki/bin/view/A/B"), "xwiki")));
     }
 }

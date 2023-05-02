@@ -19,17 +19,25 @@
  */
 package org.xwiki.contrib.urlnormalizer.internal;
 
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
+
 import javax.inject.Inject;
+import javax.inject.Named;
 import javax.inject.Singleton;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.xwiki.component.annotation.Component;
+import org.xwiki.configuration.ConfigurationSource;
 import org.xwiki.contrib.urlnormalizer.URLValidator;
 import org.xwiki.url.ExtendedURL;
 import org.xwiki.url.URLConfiguration;
-import org.xwiki.url.internal.standard.StandardURLConfiguration;
+import org.xwiki.wiki.descriptor.WikiDescriptor;
 import org.xwiki.wiki.descriptor.WikiDescriptorManager;
+import org.xwiki.wiki.manager.WikiManagerException;
 
 /**
  * Validates if an {@link ExtendedURL} points to a local URL or not.
@@ -40,6 +48,13 @@ import org.xwiki.wiki.descriptor.WikiDescriptorManager;
 @Singleton
 public class LocalURLValidator implements URLValidator<ExtendedURL>
 {
+    private static final Map<String, Integer> PORTS = new HashMap<>();
+
+    static {
+        PORTS.put("http", 80);
+        PORTS.put("https", 443);
+    }
+
     @Inject
     private Logger logger;
 
@@ -50,43 +65,77 @@ public class LocalURLValidator implements URLValidator<ExtendedURL>
     private URLConfiguration urlConfiguration;
 
     @Inject
-    private StandardURLConfiguration standardURLConfiguration;
+    @Named("xwikicfg")
+    private ConfigurationSource configurationSource;
+
+    private int getPort(URL url)
+    {
+        int port = url.getPort();
+
+        if (port == -1) {
+            port = PORTS.getOrDefault(url.getProtocol().toLowerCase(), -1);
+        }
+
+        return port;
+    }
+
+    private int getPort(WikiDescriptor wikiDescriptor)
+    {
+        int port = wikiDescriptor.getPort();
+
+        if (port == -1) {
+            port = Boolean.TRUE.equals(wikiDescriptor.isSecure()) ? 443 : 80;
+        }
+
+        return port;
+    }
+
+    private boolean isKnownDomainAndPort(ExtendedURL extendedURL) throws WikiManagerException, MalformedURLException
+    {
+        // Check the descriptor
+        WikiDescriptor wikiDescriptor = this.wikiDescriptorManager.getByAlias(extendedURL.getWrappedURL().getHost());
+        if (wikiDescriptor != null) {
+            return getPort(wikiDescriptor) == getPort(extendedURL.getWrappedURL());
+        }
+
+        // Check if the URL matches the configured "home URL"
+        return isConfiguredHome(extendedURL);
+    }
+
+    private boolean isConfiguredHome(ExtendedURL extendedURL) throws MalformedURLException
+    {
+        String home = this.configurationSource.getProperty("xwiki.home");
+
+        if (home != null) {
+            URL homeURL = new URL(home);
+
+            return homeURL.getHost().equals(extendedURL.getWrappedURL().getHost())
+                && getPort(homeURL) == getPort(extendedURL.getWrappedURL());
+        }
+
+        return false;
+    }
 
     @Override
     public boolean validate(ExtendedURL extendedURL)
     {
         boolean isLocal = false;
 
-        try {
-            // Verify that the URL points to a local URL by checking its domain.
-            // TODO: Add a new API to check if a URL is a valid local URL in the URL module in the future
-            // Note: ATM we only support the "Standard" URL scheme...
-            if (this.urlConfiguration.getURLFormatId().equals("standard")) {
-                String wikiAlias;
-                if (this.standardURLConfiguration.isPathBasedMultiWiki()) {
-                    if (this.wikiDescriptorManager.getMainWikiId()
-                        .equals(this.wikiDescriptorManager.getCurrentWikiId()))
-                    {
-                        // Fall back to domain base in this case
-                        wikiAlias = extendedURL.getWrappedURL().getHost();
-                    } else {
-                        // The second segment is the name of the wiki.
-                        wikiAlias = extendedURL.getSegments().get(1);
-                    }
-                } else {
-                    wikiAlias = extendedURL.getWrappedURL().getHost();
-                }
-                if (this.wikiDescriptorManager.getByAlias(wikiAlias) != null) {
-                    isLocal = true;
-                }
-                this.logger.debug("Wiki descriptor for [{}]: {}", wikiAlias, isLocal);
+        // TODO: Add a new API to check if a URL is a valid local URL in the URL module in the future
+        // Note: ATM we only support the "Standard" URL scheme...
+        if (this.urlConfiguration.getURLFormatId().equals("standard")) {
+            try {
+                // Check if the domain/port is known
+                return isKnownDomainAndPort(extendedURL);
+            } catch (Exception e) {
+                // It's not normal to fail here, log a warning
+                this.logger.warn("Failed to validate URL [{}]. Root reason [{}]", extendedURL,
+                    ExceptionUtils.getRootCauseMessage(e));
+
+                isLocal = false;
             }
-        } catch (Exception e) {
-            // It's not normal to fail here, log a warning
-            this.logger.warn("Failed to validate URL [{}]. Root reason [{}]", extendedURL,
-                ExceptionUtils.getRootCauseMessage(e));
-            isLocal = false;
         }
+
         return isLocal;
     }
 }
