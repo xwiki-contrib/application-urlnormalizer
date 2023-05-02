@@ -47,6 +47,10 @@
       <id>aubincleme</id>
       <name>Clément Aubin</name>
     </developer>
+    <developer>
+      <id>tmortagne</id>
+      <name>Thomas Mortagne</name>
+    </developer>
   </developers>
   <properties>
     <xwiki.release.jira.skip>false</xwiki.release.jira.skip>
