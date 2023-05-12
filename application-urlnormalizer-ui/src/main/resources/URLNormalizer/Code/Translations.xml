@@ -42,11 +42,25 @@
 admin.urlnormalizer=URL Normalizer
 urlnormalizer.admin.sectionTitle=URL Normalizer
 
+urlnormalizer.admin.filters.title=Filters
+urlnormalizer.admin.filters.description=The URL normalizer is automatically converting URL known to point to wiki pages into internal wiki links, but sometimes you don't want the default behavior or there is no way to know from the standard configuration that the URL is in fact targeting a wiki page (for example if there is a redirect to a wiki page behind this URL). For those use cases, you can define filters in charge of matching a link and converting its reference to something else.
+
+urlnormalizer.admin.normalize=Normalize
 urlnormalizer.admin.createNewVersions=Create a new document version upon normalization
 urlnormalizer.admin.createNewVersions.hint=Defines if a new version of the document should appear in the history when performing the normalization.
 urlnormalizer.admin.createNewVersionYes=Yes
 urlnormalizer.admin.createNewVersionNo=No
-urlnormalizer.admin.submit=Start normalization</content>
+urlnormalizer.admin.submit=Start normalization
+
+URLNormalizer.Code.FilterClass_sourceType=Source type
+URLNormalizer.Code.FilterClass_sourceType_hint=The type of the link to convert (url, path, etc.)
+URLNormalizer.Code.FilterClass_sourceReference=Source reference pattern
+URLNormalizer.Code.FilterClass_sourceReference_hint=The regular expression matching pattern to use to match the reference of the link to convert
+URLNormalizer.Code.FilterClass_targetType=Target type
+URLNormalizer.Code.FilterClass_targetType_hint=The type of the resulting link (doc, page, etc.)
+URLNormalizer.Code.FilterClass_targetReference=Target reference
+URLNormalizer.Code.FilterClass_targetReference_hint=The regular expression result pattern to use to produce reference of the resulting link
+</content>
   <object>
     <name>URLNormalizer.Code.Translations</name>
     <number>0</number>

@@ -21,20 +21,26 @@ package org.xwiki.contrib.urlnormalizer.internal;
 
 import java.net.URL;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.text.StringSubstitutor;
 import org.slf4j.Logger;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.container.Container;
 import org.xwiki.container.servlet.ServletRequest;
+import org.xwiki.contrib.urlnormalizer.NormalizationException;
 import org.xwiki.contrib.urlnormalizer.ResourceReferenceNormalizer;
+import org.xwiki.contrib.urlnormalizer.URLNormalizerFilter;
 import org.xwiki.contrib.urlnormalizer.URLValidator;
+import org.xwiki.contrib.urlnormalizer.internal.filter.URLNormalizerConfigurationStore;
 import org.xwiki.model.EntityType;
 import org.xwiki.model.reference.EntityReferenceSerializer;
 import org.xwiki.rendering.listener.reference.ResourceReference;
@@ -43,6 +49,7 @@ import org.xwiki.resource.ResourceReferenceResolver;
 import org.xwiki.resource.ResourceTypeResolver;
 import org.xwiki.resource.entity.EntityResourceReference;
 import org.xwiki.url.ExtendedURL;
+import org.xwiki.wiki.descriptor.WikiDescriptorManager;
 
 /**
  * Default implementation of {@link ResourceReferenceNormalizer}, supporting only the "standard" URL scheme for the
@@ -55,9 +62,6 @@ import org.xwiki.url.ExtendedURL;
 @Singleton
 public class LocalURLResourceReferenceNormalizer implements ResourceReferenceNormalizer
 {
-    @Inject
-    private Logger logger;
-
     @Inject
     private Container container;
 
@@ -77,30 +81,75 @@ public class LocalURLResourceReferenceNormalizer implements ResourceReferenceNor
     @Inject
     private URLValidator<EntityResourceReference> actionURLValidator;
 
+    @Inject
+    private URLNormalizerConfigurationStore store;
+
+    @Inject
+    private WikiDescriptorManager wikiDescriptorManager;
+
+    @Inject
+    private Logger logger;
+
+    private ResourceReference filter(ResourceReference reference) throws NormalizationException
+    {
+        List<URLNormalizerFilter> filters = this.store.getFilters(this.wikiDescriptorManager.getCurrentWikiReference());
+
+        // Try each configured filter
+        for (URLNormalizerFilter filter : filters) {
+            if (filter.getLinkType().equals(reference.getType())) {
+                // Try to match the reference with the configured regex
+                Matcher matcher = filter.getLinkReference().matcher(reference.getReference());
+
+                if (matcher.matches()) {
+                    int groupCount = matcher.groupCount();
+                    Map<String, String> values = new HashMap<>(groupCount);
+                    for (int i = 0; i <= groupCount; ++i) {
+                        values.put(String.valueOf(i), matcher.group(i));
+                    }
+
+                    // Apply the replacement pattern using the matched regex groups as input
+                    String targetReference = new StringSubstitutor(k -> {
+                        String value = values.get(k);
+
+                        if (value == null) {
+                            value = matcher.group(k);
+                        }
+
+                        return value;
+                    }).replace(filter.getTargetReference());
+
+                    // Create a the target reference
+                    ResourceReference filteredReference =
+                        new ResourceReference(targetReference, filter.getTargetType());
+                    filteredReference.setParameters(reference.getParameters());
+                    filteredReference.addBaseReferences(reference.getBaseReferences());
+
+                    return filteredReference;
+                }
+            }
+        }
+
+        return reference;
+    }
+
     @Override
     public ResourceReference normalize(ResourceReference reference)
     {
         this.logger.debug("Trying to normalize [{}]", reference.getReference());
 
         ResourceReference normalizedReference = reference;
+
+        // Try configured filters
         try {
-            if (reference.getType().equals(ResourceType.URL) && this.container.getRequest() instanceof ServletRequest) {
-                String referenceString = reference.getReference();
+            normalizedReference = filter(reference);
+        } catch (Exception e) {
+            this.logger.error("Failed to filter the reference [{}]", reference, e);
+        }
 
-                // TODO: check a regex based configured mapping
-
-                URL referenceURL = new URL(referenceString);
-
-                // Ignore URLs with a reference since they are not supported right now
-                // FIXME: remove when https://jira.xwiki.org/browse/URLNORMALZ-11 is fixed
-                if (StringUtils.isEmpty(referenceURL.getRef())) {
-                    ServletRequest servletRequest = (ServletRequest) this.container.getRequest();
-                    ExtendedURL extendedURL =
-                        new ExtendedURL(referenceURL, servletRequest.getHttpServletRequest().getContextPath());
-                    if (this.localURLValidator.validate(extendedURL)) {
-                        normalizedReference = resolveReference(extendedURL, reference);
-                    }
-                }
+        try {
+            if (normalizedReference == reference && reference.getType().equals(ResourceType.URL)
+                && this.container.getRequest() instanceof ServletRequest) {
+                normalizedReference = normalizeURL(new URL(reference.getReference()), normalizedReference);
             }
         } catch (Exception e) {
             // An error happened during normalization. Ideally we should log it as a warning. The problem is that
@@ -108,6 +157,23 @@ public class LocalURLResourceReferenceNormalizer implements ResourceReferenceNor
             // local URL. Thus we need to ignore all errors in order to avoid spurious logs for the user.
             // That's why we log it only at debug level.
             this.logger.debug("Failed to normalize URL [{}] into a wiki link", reference.getReference(), e);
+        }
+
+        return normalizedReference;
+    }
+
+    private ResourceReference normalizeURL(URL referenceURL, ResourceReference reference) throws Exception
+    {
+        // Ignore URLs with a reference since they are not supported right now
+        // FIXME: remove when https://jira.xwiki.org/browse/URLNORMALZ-11 is fixed
+        ResourceReference normalizedReference = reference;
+        if (StringUtils.isEmpty(referenceURL.getRef())) {
+            ServletRequest servletRequest = (ServletRequest) this.container.getRequest();
+            ExtendedURL extendedURL =
+                new ExtendedURL(referenceURL, servletRequest.getHttpServletRequest().getContextPath());
+            if (this.localURLValidator.validate(extendedURL)) {
+                normalizedReference = resolveReference(extendedURL, reference);
+            }
         }
 
         return normalizedReference;

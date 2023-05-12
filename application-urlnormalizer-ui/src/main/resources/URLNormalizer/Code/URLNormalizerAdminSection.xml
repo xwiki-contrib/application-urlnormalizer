@@ -36,7 +36,49 @@
   <minorEdit>false</minorEdit>
   <syntaxId>xwiki/2.1</syntaxId>
   <hidden>true</hidden>
-  <content>{{job id="URLNormalizer.Code.URLNormalizerAdminSection" start="{{velocity}}$request.confirm{{/velocity}}"}}
+  <content>{{velocity}}
+#macro(editFilterProperty $obj $propertyName)
+    #set ($property = $obj.getProperty($propertyName))
+    #set ($propertyClass = $obj.getxWikiClass().get($propertyName))
+    #set ($propertyId = "URLNormalizer.Code.FilterClass_${obj.number}_${escapetool.xml($property.name)}")
+    &lt;dt&gt;
+      &lt;label for="$propertyId"&gt;$escapetool.xml($propertyClass.translatedPrettyName)&lt;/label&gt;
+      &lt;span class="xHint"&gt;$!escapetool.xml($propertyClass.hint)&lt;/span&gt;
+    &lt;/dt&gt;
+    &lt;dd&gt;
+      &lt;input id="$propertyId" name="$propertyId" size="30" type="text" value="$escapetool.xml($property.value)"&gt;
+    &lt;/dd&gt;
+#end
+{{/velocity}}
+
+=== {{translation key="urlnormalizer.admin.filters.title"/}}
+
+{{translation key="urlnormalizer.admin.filters.description"/}}
+
+{{velocity}}
+#set ($configurationDocument = $xwiki.getDocument('URLNormalizer.Code.Configuration'))
+
+{{html}}
+&lt;form action="#" method="post" class="xform"&gt;
+  #foreach ($filterObject in $configurationDocument.getObjects('URLNormalizer.Code.FilterClass'))
+    &lt;fieldset class="box"&gt;
+      &lt;dl&gt;
+        #editFilterProperty($filterObject, 'sourceType')
+        #editFilterProperty($filterObject, 'sourceReference')
+        #editFilterProperty($filterObject, 'targetType')
+        #editFilterProperty($filterObject, 'targetReference')
+      &lt;/dl&gt;
+    &lt;/fieldset&gt;
+  #end
+
+  &lt;button class="btn btn-primary hidden"&gt;$escapetool.xml($services.localization.render('urlnormalizer.admin.filters.save'))&lt;/button&gt;
+&lt;/form&gt;
+{{/html}}
+{{/velocity}}
+
+=== {{translation key="urlnormalizer.admin.normalize"/}}
+
+{{job id="URLNormalizer.Code.URLNormalizerAdminSection" start="{{velocity}}$request.confirm{{/velocity}}"}}
 {{velocity}}
 #set($logger = $services.logging.getLogger($doc.fullName))
 #set($discard = $services.logging.setLevel($doc.fullName, 'INFO'))
@@ -71,24 +113,22 @@
     &lt;form action="#" method="post" class="xform"&gt;
       &lt;dl&gt;
         &lt;dt&gt;
-          &lt;label for="urlNormalizerNewVersions"&gt;$services.localization.render('urlnormalizer.admin.createNewVersions')&lt;/label&gt;
-          &lt;span class="xHint"&gt;
-            $services.localization.render('urlnormalizer.admin.createNewVersions.hint')
-          &lt;/span&gt;
+          &lt;label for="urlNormalizerNewVersions"&gt;$escapetool.xml($services.localization.render('urlnormalizer.admin.createNewVersions'))&lt;/label&gt;
+          &lt;span class="xHint"&gt;$escapetool.xml($services.localization.render('urlnormalizer.admin.createNewVersions.hint'))&lt;/span&gt;
         &lt;/dt&gt;
         &lt;dd&gt;
           &lt;input id="createNewVersionYes" type="radio" name="createNewVersion" value="1" checked/&gt;
-          &lt;label for="createNewVersionYes"&gt;$services.localization.render('urlnormalizer.admin.createNewVersionYes')&lt;/label&gt;
+          &lt;label for="createNewVersionYes"&gt;$escapetool.xml($services.localization.render('urlnormalizer.admin.createNewVersionYes'))&lt;/label&gt;
         &lt;/dd&gt;
         &lt;dd&gt;
           &lt;input id="createNewVersionNo" type="radio" name="createNewVersion" value="0"/&gt;
-          &lt;label for="createNewVersionNo"&gt;$services.localization.render('urlnormalizer.admin.createNewVersionNo')&lt;/label&gt;
+          &lt;label for="createNewVersionNo"&gt;$escapetool.xml($services.localization.render('urlnormalizer.admin.createNewVersionNo'))&lt;/label&gt;
         &lt;/dd&gt;
       &lt;/dl&gt;
       &lt;p&gt;
         &lt;input type="hidden" name="confirm" value="true"/&gt;
         &lt;span class="buttonwrapper"&gt;
-          &lt;input class="button" type="submit" value="$services.localization.render('urlnormalizer.admin.submit')"/&gt;
+          &lt;input class="button" type="submit" value="$escapetool.xml($services.localization.render('urlnormalizer.admin.submit'))"/&gt;
         &lt;/span&gt;
       &lt;/p&gt;
     &lt;/form&gt;
@@ -123,9 +163,11 @@
         <classType>com.xpn.xwiki.objects.classes.StringClass</classType>
       </categoryIcon>
       <codeToExecute>
+        <contenttype>VelocityWiki</contenttype>
         <customDisplay/>
         <disabled>0</disabled>
-        <editor>Text</editor>
+        <editor>---</editor>
+        <hint/>
         <name>codeToExecute</name>
         <number>7</number>
         <picker>0</picker>

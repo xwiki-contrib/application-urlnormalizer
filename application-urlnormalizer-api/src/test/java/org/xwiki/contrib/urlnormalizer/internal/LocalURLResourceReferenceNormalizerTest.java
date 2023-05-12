@@ -19,6 +19,9 @@
  */
 package org.xwiki.contrib.urlnormalizer.internal;
 
+import java.util.Arrays;
+import java.util.regex.Pattern;
+
 import javax.inject.Named;
 import javax.servlet.http.HttpServletRequest;
 
@@ -27,6 +30,8 @@ import org.junit.jupiter.api.Test;
 import org.xwiki.container.Container;
 import org.xwiki.container.servlet.ServletRequest;
 import org.xwiki.contrib.urlnormalizer.URLValidator;
+import org.xwiki.contrib.urlnormalizer.internal.filter.DefaultURLNormalizerFilter;
+import org.xwiki.contrib.urlnormalizer.internal.filter.URLNormalizerConfigurationStore;
 import org.xwiki.model.reference.AttachmentReference;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.EntityReference;
@@ -78,6 +83,9 @@ class LocalURLResourceReferenceNormalizerTest
     @MockComponent
     @Named("compactwiki")
     private EntityReferenceSerializer<String> compactwikiSerializer;
+
+    @MockComponent
+    private URLNormalizerConfigurationStore store;
 
     @BeforeEach
     public void beforeEach() throws Exception
@@ -221,5 +229,19 @@ class LocalURLResourceReferenceNormalizerTest
 
         assertEquals(ResourceType.ATTACHMENT, normalizedReference.getType());
         assertEquals("A.B@attachment", normalizedReference.getReference());
+    }
+
+    @Test
+    void normalizeWithAFilter() throws Exception
+    {
+        when(this.store.getFilters(null)).thenReturn(Arrays.asList(
+            new DefaultURLNormalizerFilter(ResourceType.ATTACHMENT, Pattern.compile("re(.*)"),
+                ResourceType.DOCUMENT, "filtered-${1}"),
+            new DefaultURLNormalizerFilter(ResourceType.ATTACHMENT, Pattern.compile("otherrefe(?<name>.*)"),
+                ResourceType.DOCUMENT, "filtered-${name}")));
+
+        assertEquals(new ResourceReference("reference", ResourceType.DATA), this.normalizer.normalize(new ResourceReference("reference", ResourceType.DATA)));
+        assertEquals(new ResourceReference("filtered-ference", ResourceType.DOCUMENT), this.normalizer.normalize(new ResourceReference("reference", ResourceType.ATTACHMENT)));
+        assertEquals(new ResourceReference("filtered-rence", ResourceType.DOCUMENT), this.normalizer.normalize(new ResourceReference("otherreference", ResourceType.ATTACHMENT)));
     }
 }
