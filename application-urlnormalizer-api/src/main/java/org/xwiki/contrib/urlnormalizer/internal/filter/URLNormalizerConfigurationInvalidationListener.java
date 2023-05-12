@@ -39,7 +39,7 @@ import com.xpn.xwiki.objects.BaseObjectReference;
  * Listener in charge of invalidating the configuration cache.
  * 
  * @version $Id$
- * @since 1.5
+ * @since 1.6
  */
 @Component
 @Named(URLNormalizerConfigurationInvalidationListener.NAME)

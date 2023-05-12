@@ -27,7 +27,7 @@ import org.xwiki.rendering.listener.reference.ResourceType;
  * A filter in charge of describing the transformation to apply to a matched link reference.
  * 
  * @version $Id$
- * @since 1.5
+ * @since 1.6
  */
 public interface URLNormalizerFilter
 {

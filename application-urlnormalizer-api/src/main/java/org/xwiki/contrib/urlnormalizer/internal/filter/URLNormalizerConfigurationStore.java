@@ -56,7 +56,7 @@ import com.xpn.xwiki.objects.BaseObject;
  * Manipulate {@link URLNormalizerFilter} instances.
  * 
  * @version $Id$
- * @since 1.5
+ * @since 1.6
  */
 @Component(roles = URLNormalizerConfigurationStore.class)
 @Singleton

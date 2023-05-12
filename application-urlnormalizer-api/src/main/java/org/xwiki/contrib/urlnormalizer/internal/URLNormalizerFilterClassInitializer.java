@@ -35,7 +35,7 @@ import com.xpn.xwiki.objects.classes.TextAreaClass.ContentType;
  * Initialize the class {@code URLNormalizer.Code.FilterClass}.
  * 
  * @version $Id$
- * @since 1.5
+ * @since 1.6
  */
 @Component
 @Named(URLNormalizerFilterClassInitializer.CLASS_FULLNAME)

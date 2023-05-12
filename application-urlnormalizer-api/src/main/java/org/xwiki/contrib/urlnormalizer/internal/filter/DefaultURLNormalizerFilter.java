@@ -28,7 +28,7 @@ import org.xwiki.rendering.listener.reference.ResourceType;
  * Default implementation of {@link URLNormalizerFilter}.
  * 
  * @version $Id$
- * @since 1.5
+ * @since 1.6
  */
 public class DefaultURLNormalizerFilter implements URLNormalizerFilter
 {
