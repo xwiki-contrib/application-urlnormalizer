@@ -20,7 +20,7 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
 -->
 
-<xwikidoc version="1.3" reference="URLNormalizer.Code.URLNormalizerAdminSection" locale="">
+<xwikidoc version="1.5" reference="URLNormalizer.Code.URLNormalizerAdminSection" locale="">
   <web>URLNormalizer.Code</web>
   <name>URLNormalizerAdminSection</name>
   <language/>
@@ -29,6 +29,7 @@
   <creator>xwiki:XWiki.Admin</creator>
   <parent>URLNormalizer.Code.WebHome</parent>
   <author>xwiki:XWiki.Admin</author>
+  <originalMetadataAuthor>XWiki.Admin</originalMetadataAuthor>
   <contentAuthor>xwiki:XWiki.Admin</contentAuthor>
   <version>1.1</version>
   <title>URLNormalizerAdminSection</title>
@@ -36,7 +37,61 @@
   <minorEdit>false</minorEdit>
   <syntaxId>xwiki/2.1</syntaxId>
   <hidden>true</hidden>
-  <content>{{job id="URLNormalizer.Code.URLNormalizerAdminSection" start="{{velocity}}$request.confirm{{/velocity}}"}}
+  <content>{{velocity}}
+#macro(editFilterProperty $obj $propertyName)
+    #set ($property = $obj.getProperty($propertyName))
+    #set ($propertyClass = $obj.getxWikiClass().get($propertyName))
+    #set ($propertyId = "URLNormalizer.Code.FilterClass_${obj.number}_${escapetool.xml($property.name)}")
+    &lt;dt&gt;
+      &lt;label for="$propertyId"&gt;$escapetool.xml($propertyClass.translatedPrettyName)&lt;/label&gt;
+      &lt;span class="xHint"&gt;$!escapetool.xml($propertyClass.hint)&lt;/span&gt;
+    &lt;/dt&gt;
+    &lt;dd&gt;
+      &lt;input id="$propertyId" name="$propertyId" size="30" type="text" value="$escapetool.xml($property.value)"&gt;
+    &lt;/dd&gt;
+#end
+{{/velocity}}
+
+== {{translation key="urlnormalizer.admin.filters.title"/}}
+
+{{translation key="urlnormalizer.admin.filters.description"/}}
+
+{{velocity}}
+#set ($configurationDocument = $xwiki.getDocument('URLNormalizer.Code.Configuration'))
+
+{{html}}
+#set ($discard = $xwiki.jsx.use('URLNormalizer.Code.URLNormalizerAdminSection'))
+#set ($filtersDocument = $xwiki.getDocument('URLNormalizer.Code.Configuration'))
+#set ($formToken = $services.csrf.getToken())
+#set ($formRedirect = $xwiki.requestURL)
+&lt;form id="url_filters" method="post" class="xform" action="$escapetool.xml($filtersDocument.getURL('save'))"&gt;
+  &lt;input type="hidden" name="xredirect" value="$escapetool.xml($formRedirect)"/&gt;
+  &lt;input type="hidden" name="form_token" value="$formToken"/&gt;
+
+  #foreach ($filterObject in $configurationDocument.getObjects('URLNormalizer.Code.FilterClass'))
+    &lt;fieldset class="box url_filter"&gt;
+      &lt;dl&gt;
+        #editFilterProperty($filterObject, 'sourceType')
+        #editFilterProperty($filterObject, 'sourceReference')
+        #editFilterProperty($filterObject, 'targetType')
+        #editFilterProperty($filterObject, 'targetReference')
+      &lt;/dl&gt;
+      &lt;a href="$filtersDocument.getURL('objectremove', "form_token=$formToken&amp;amp;classname=URLNormalizer.Code.FilterClass&amp;amp;classid=${filterObject.number}&amp;amp;xredirect=${escapetool.url($formRedirect)}")" class="filter-action-delete" title="$services.localization.render('urlnormalizer.admin.filters.removeFilter.tooltip')"&gt;$services.localization.render('urlnormalizer.admin.filters.removeFilter')&lt;/a&gt;
+    &lt;/fieldset&gt;
+  #end
+
+  &lt;p&gt;
+    &lt;a href="$filtersDocument.getURL('objectadd', "form_token=$formToken&amp;amp;classname=URLNormalizer.Code.FilterClass&amp;amp;xredirect=${escapetool.url($formRedirect)}")" class="filter-action-add" title="$services.localization.render('urlnormalizer.admin.filters.addFilter')"&gt;$services.localization.render('urlnormalizer.admin.filters.addFilter')&lt;/a&gt;
+  &lt;/p&gt;
+
+  &lt;button class="btn btn-primary"&gt;$escapetool.xml($services.localization.render('urlnormalizer.admin.filters.save'))&lt;/button&gt;
+&lt;/form&gt;
+{{/html}}
+{{/velocity}}
+
+== {{translation key="urlnormalizer.admin.normalize"/}}
+
+{{job id="URLNormalizer.Code.URLNormalizerAdminSection" start="{{velocity}}$request.confirm{{/velocity}}"}}
 {{velocity}}
 #set($logger = $services.logging.getLogger($doc.fullName))
 #set($discard = $services.logging.setLevel($doc.fullName, 'INFO'))
@@ -71,24 +126,22 @@
     &lt;form action="#" method="post" class="xform"&gt;
       &lt;dl&gt;
         &lt;dt&gt;
-          &lt;label for="urlNormalizerNewVersions"&gt;$services.localization.render('urlnormalizer.admin.createNewVersions')&lt;/label&gt;
-          &lt;span class="xHint"&gt;
-            $services.localization.render('urlnormalizer.admin.createNewVersions.hint')
-          &lt;/span&gt;
+          &lt;label for="urlNormalizerNewVersions"&gt;$escapetool.xml($services.localization.render('urlnormalizer.admin.createNewVersions'))&lt;/label&gt;
+          &lt;span class="xHint"&gt;$escapetool.xml($services.localization.render('urlnormalizer.admin.createNewVersions.hint'))&lt;/span&gt;
         &lt;/dt&gt;
         &lt;dd&gt;
           &lt;input id="createNewVersionYes" type="radio" name="createNewVersion" value="1" checked/&gt;
-          &lt;label for="createNewVersionYes"&gt;$services.localization.render('urlnormalizer.admin.createNewVersionYes')&lt;/label&gt;
+          &lt;label for="createNewVersionYes"&gt;$escapetool.xml($services.localization.render('urlnormalizer.admin.createNewVersionYes'))&lt;/label&gt;
         &lt;/dd&gt;
         &lt;dd&gt;
           &lt;input id="createNewVersionNo" type="radio" name="createNewVersion" value="0"/&gt;
-          &lt;label for="createNewVersionNo"&gt;$services.localization.render('urlnormalizer.admin.createNewVersionNo')&lt;/label&gt;
+          &lt;label for="createNewVersionNo"&gt;$escapetool.xml($services.localization.render('urlnormalizer.admin.createNewVersionNo'))&lt;/label&gt;
         &lt;/dd&gt;
       &lt;/dl&gt;
       &lt;p&gt;
         &lt;input type="hidden" name="confirm" value="true"/&gt;
         &lt;span class="buttonwrapper"&gt;
-          &lt;input class="button" type="submit" value="$services.localization.render('urlnormalizer.admin.submit')"/&gt;
+          &lt;input class="button" type="submit" value="$escapetool.xml($services.localization.render('urlnormalizer.admin.submit'))"/&gt;
         &lt;/span&gt;
       &lt;/p&gt;
     &lt;/form&gt;
@@ -112,6 +165,7 @@
       <categoryIcon>
         <customDisplay/>
         <disabled>0</disabled>
+        <hint/>
         <name>categoryIcon</name>
         <number>11</number>
         <picker>0</picker>
@@ -123,9 +177,11 @@
         <classType>com.xpn.xwiki.objects.classes.StringClass</classType>
       </categoryIcon>
       <codeToExecute>
+        <contenttype>VelocityWiki</contenttype>
         <customDisplay/>
         <disabled>0</disabled>
-        <editor>Text</editor>
+        <editor>---</editor>
+        <hint/>
         <name>codeToExecute</name>
         <number>7</number>
         <picker>0</picker>
@@ -141,10 +197,13 @@
         <cache>0</cache>
         <classname/>
         <customDisplay/>
+        <defaultValue/>
         <disabled>0</disabled>
         <displayType>input</displayType>
+        <freeText/>
         <hint/>
         <idField/>
+        <largeStorage>0</largeStorage>
         <multiSelect>0</multiSelect>
         <name>configurationClass</name>
         <number>3</number>
@@ -162,23 +221,10 @@
         <valueField/>
         <classType>com.xpn.xwiki.objects.classes.PageClass</classType>
       </configurationClass>
-      <configureGlobally>
-        <customDisplay/>
-        <defaultValue/>
-        <disabled>0</disabled>
-        <displayFormType>checkbox</displayFormType>
-        <displayType/>
-        <name>configureGlobally</name>
-        <number>4</number>
-        <prettyName>configureGlobally</prettyName>
-        <unmodifiable>0</unmodifiable>
-        <validationMessage/>
-        <validationRegExp/>
-        <classType>com.xpn.xwiki.objects.classes.BooleanClass</classType>
-      </configureGlobally>
       <displayBeforeCategory>
         <customDisplay/>
         <disabled>0</disabled>
+        <hint/>
         <name>displayBeforeCategory</name>
         <number>10</number>
         <picker>0</picker>
@@ -192,6 +238,7 @@
       <displayInCategory>
         <customDisplay/>
         <disabled>0</disabled>
+        <hint/>
         <name>displayInCategory</name>
         <number>9</number>
         <picker>0</picker>
@@ -205,6 +252,7 @@
       <displayInSection>
         <customDisplay/>
         <disabled>0</disabled>
+        <hint/>
         <name>displayInSection</name>
         <number>1</number>
         <picker>0</picker>
@@ -218,6 +266,7 @@
       <heading>
         <customDisplay/>
         <disabled>0</disabled>
+        <hint/>
         <name>heading</name>
         <number>2</number>
         <picker>0</picker>
@@ -231,6 +280,7 @@
       <iconAttachment>
         <customDisplay/>
         <disabled>0</disabled>
+        <hint/>
         <name>iconAttachment</name>
         <number>8</number>
         <picker>0</picker>
@@ -244,6 +294,7 @@
       <linkPrefix>
         <customDisplay/>
         <disabled>0</disabled>
+        <hint/>
         <name>linkPrefix</name>
         <number>5</number>
         <picker>0</picker>
@@ -257,8 +308,12 @@
       <propertiesToShow>
         <cache>0</cache>
         <customDisplay/>
+        <defaultValue/>
         <disabled>0</disabled>
         <displayType>input</displayType>
+        <freeText/>
+        <hint/>
+        <largeStorage>0</largeStorage>
         <multiSelect>1</multiSelect>
         <name>propertiesToShow</name>
         <number>6</number>
@@ -275,9 +330,35 @@
         <values/>
         <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
       </propertiesToShow>
+      <scope>
+        <cache>0</cache>
+        <customDisplay/>
+        <defaultValue/>
+        <disabled>0</disabled>
+        <displayType>select</displayType>
+        <freeText/>
+        <hint/>
+        <largeStorage>0</largeStorage>
+        <multiSelect>0</multiSelect>
+        <name>scope</name>
+        <number>12</number>
+        <picker>1</picker>
+        <prettyName>scope</prettyName>
+        <relationalStorage>0</relationalStorage>
+        <separator> </separator>
+        <separators>|, </separators>
+        <size>1</size>
+        <sort/>
+        <unmodifiable>0</unmodifiable>
+        <validationMessage/>
+        <validationRegExp/>
+        <values>WIKI|SPACE|ALL_SPACES|WIKI+ALL_SPACES</values>
+        <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
+      </scope>
       <sectionOrder>
         <customDisplay/>
         <disabled>0</disabled>
+        <hint/>
         <name>sectionOrder</name>
         <number>12</number>
         <numberType>integer</numberType>
@@ -299,9 +380,6 @@
       <configurationClass/>
     </property>
     <property>
-      <configureGlobally>1</configureGlobally>
-    </property>
-    <property>
       <displayBeforeCategory/>
     </property>
     <property>
@@ -311,7 +389,7 @@
       <displayInSection>urlnormalizer</displayInSection>
     </property>
     <property>
-      <heading>$services.localization.render('urlnormalizer.admin.sectionTitle')</heading>
+      <heading/>
     </property>
     <property>
       <iconAttachment/>
@@ -321,6 +399,9 @@
     </property>
     <property>
       <propertiesToShow/>
+    </property>
+    <property>
+      <scope>WIKI</scope>
     </property>
     <property>
       <sectionOrder/>
