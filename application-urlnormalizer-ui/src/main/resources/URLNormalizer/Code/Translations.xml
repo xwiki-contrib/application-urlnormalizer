@@ -60,11 +60,11 @@ urlnormalizer.admin.submit=Start normalization
 URLNormalizer.Code.FilterClass_sourceType=Source type
 URLNormalizer.Code.FilterClass_sourceType_hint=The type of the link to convert (url, path, etc.).
 URLNormalizer.Code.FilterClass_sourceReference=Source reference pattern
-URLNormalizer.Code.FilterClass_sourceReference_hint=The regular expression matching pattern to use to match the reference of the link to convert.
+URLNormalizer.Code.FilterClass_sourceReference_hint=The regular expression used to match the reference of the link to convert. For example "(.*).mydomain.com".
 URLNormalizer.Code.FilterClass_targetType=Target type
 URLNormalizer.Code.FilterClass_targetType_hint=The type of the resulting link (doc, page, etc.).
 URLNormalizer.Code.FilterClass_targetReference=Target reference
-URLNormalizer.Code.FilterClass_targetReference_hint=The regular expression result pattern to use to produce reference of the resulting link.
+URLNormalizer.Code.FilterClass_targetReference_hint=The pattern used to create the resulting reference. It's possible to reused matched indexed or named groups from the regular expression with the syntaxes ${2} and ${mygroup}. ${0} contains the entire matched reference. For example "xwiki:Documentation.${1}".
 </content>
   <object>
     <name>URLNormalizer.Code.Translations</name>
