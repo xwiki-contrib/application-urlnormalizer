@@ -49,6 +49,7 @@ import org.xwiki.test.junit5.mockito.MockComponent;
 import org.xwiki.url.ExtendedURL;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -100,6 +101,11 @@ class LocalURLResourceReferenceNormalizerTest
     @Test
     void normalizeWhenURLPointsToWikiLink() throws Exception
     {
+        assertNormalizeWhenURLPointsToWikiLink(true);
+    }
+
+    void assertNormalizeWhenURLPointsToWikiLink(boolean expectConverted) throws Exception
+    {
         org.xwiki.resource.ResourceType type = new org.xwiki.resource.ResourceType("entity");
         when(this.typeResolver.resolve(any(ExtendedURL.class), any())).thenReturn(type);
 
@@ -117,8 +123,12 @@ class LocalURLResourceReferenceNormalizerTest
             new ResourceReference("http://my.some.domain/xwiki/bin/view/A/B", ResourceType.URL);
         ResourceReference normalizedReference = this.normalizer.normalize(reference);
 
-        assertEquals(ResourceType.DOCUMENT, normalizedReference.getType());
-        assertEquals("A.B", normalizedReference.getReference());
+        if (expectConverted) {
+            assertEquals(ResourceType.DOCUMENT, normalizedReference.getType());
+            assertEquals("A.B", normalizedReference.getReference());
+        } else {
+            assertSame(reference, normalizedReference);
+        }
     }
 
     @Test
@@ -243,5 +253,15 @@ class LocalURLResourceReferenceNormalizerTest
         assertEquals(new ResourceReference("reference", ResourceType.DATA), this.normalizer.normalize(new ResourceReference("reference", ResourceType.DATA)));
         assertEquals(new ResourceReference("filtered-ference", ResourceType.DOCUMENT), this.normalizer.normalize(new ResourceReference("reference", ResourceType.ATTACHMENT)));
         assertEquals(new ResourceReference("filtered-rence", ResourceType.DOCUMENT), this.normalizer.normalize(new ResourceReference("otherreference", ResourceType.ATTACHMENT)));
+    }
+
+    @Test
+    void normalizeWhenDisablingURLPointsToWikiLink() throws Exception
+    {
+        when(this.store.getFilters(null)).thenReturn(Arrays.asList(
+            new DefaultURLNormalizerFilter(ResourceType.URL, Pattern.compile("http://my.some.domain/xwiki/bin/view/A/B"),
+                null, null)));
+
+        assertNormalizeWhenURLPointsToWikiLink(false);
     }
 }

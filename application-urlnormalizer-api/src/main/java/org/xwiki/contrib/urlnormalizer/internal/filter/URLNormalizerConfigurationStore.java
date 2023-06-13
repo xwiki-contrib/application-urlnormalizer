@@ -161,11 +161,18 @@ public class URLNormalizerConfigurationStore implements Initializable
             return new DefaultURLNormalizerFilter(
                 new ResourceType(filterObject.getStringValue(URLNormalizerFilterClassInitializer.FIELD_LINK_TYPE)),
                 Pattern.compile(linkReference),
-                new ResourceType(filterObject.getStringValue(URLNormalizerFilterClassInitializer.FIELD_TARGET_TYPE)),
+                getResourceType(filterObject, URLNormalizerFilterClassInitializer.FIELD_TARGET_TYPE),
                 filterObject.getStringValue(URLNormalizerFilterClassInitializer.FIELD_TARGET_REFERENCE));
         }
 
         return null;
+    }
+
+    private ResourceType getResourceType(BaseObject filterObject, String name)
+    {
+        String value = StringUtils.defaultIfEmpty(filterObject.getStringValue(name), null);
+
+        return StringUtils.isEmpty(value) ? null : new ResourceType(value);
     }
 
     /**

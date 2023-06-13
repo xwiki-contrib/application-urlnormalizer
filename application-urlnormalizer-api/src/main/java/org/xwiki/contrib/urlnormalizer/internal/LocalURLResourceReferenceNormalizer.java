@@ -90,17 +90,22 @@ public class LocalURLResourceReferenceNormalizer implements ResourceReferenceNor
     @Inject
     private Logger logger;
 
-    private ResourceReference filter(ResourceReference reference) throws NormalizationException
+    private ResourceReference filter(ResourceReference sourceReference) throws NormalizationException
     {
         List<URLNormalizerFilter> filters = this.store.getFilters(this.wikiDescriptorManager.getCurrentWikiReference());
 
         // Try each configured filter
         for (URLNormalizerFilter filter : filters) {
-            if (filter.getLinkType().equals(reference.getType())) {
+            if (filter.getLinkType().equals(sourceReference.getType())) {
                 // Try to match the reference with the configured regex
-                Matcher matcher = filter.getLinkReference().matcher(reference.getReference());
+                Matcher matcher = filter.getLinkReference().matcher(sourceReference.getReference());
 
                 if (matcher.matches()) {
+                    if (filter.getTargetType() == null) {
+                        // Conversion is not enabled for this source reference, return it as is
+                        return sourceReference;
+                    }
+
                     int groupCount = matcher.groupCount();
                     Map<String, String> values = new HashMap<>(groupCount);
                     for (int i = 0; i <= groupCount; ++i) {
@@ -121,15 +126,15 @@ public class LocalURLResourceReferenceNormalizer implements ResourceReferenceNor
                     // Create a the target reference
                     ResourceReference filteredReference =
                         new ResourceReference(targetReference, filter.getTargetType());
-                    filteredReference.setParameters(reference.getParameters());
-                    filteredReference.addBaseReferences(reference.getBaseReferences());
+                    filteredReference.setParameters(sourceReference.getParameters());
+                    filteredReference.addBaseReferences(sourceReference.getBaseReferences());
 
                     return filteredReference;
                 }
             }
         }
 
-        return reference;
+        return null;
     }
 
     @Override
@@ -137,19 +142,22 @@ public class LocalURLResourceReferenceNormalizer implements ResourceReferenceNor
     {
         this.logger.debug("Trying to normalize [{}]", reference.getReference());
 
-        ResourceReference normalizedReference = reference;
-
         // Try configured filters
         try {
-            normalizedReference = filter(reference);
+            ResourceReference normalizedReference = filter(reference);
+            if (normalizedReference != null) {
+                return normalizedReference;
+            }
         } catch (Exception e) {
             this.logger.error("Failed to filter the reference [{}]", reference, e);
         }
 
+        // Try standard conversion of URL to wiki pages
+        ResourceReference normalizedReference = reference;
+
         try {
-            if (normalizedReference == reference && reference.getType().equals(ResourceType.URL)
-                && this.container.getRequest() instanceof ServletRequest) {
-                normalizedReference = normalizeURL(new URL(reference.getReference()), normalizedReference);
+            if (reference.getType().equals(ResourceType.URL) && this.container.getRequest() instanceof ServletRequest) {
+                normalizedReference = normalizeURL(new URL(reference.getReference()), reference);
             }
         } catch (Exception e) {
             // An error happened during normalization. Ideally we should log it as a warning. The problem is that
@@ -216,15 +224,6 @@ public class LocalURLResourceReferenceNormalizer implements ResourceReferenceNor
                     // However since our original input is a ResourceReference, there's no risk of having several
                     // parameters with the same name and we can safely take the first one!...
                     normalizedReference.setParameter(parameter.getKey(), parameter.getValue().get(0));
-                }
-
-                // Handle fragments (aka anchors).
-                //
-                // Since fragments are currently not parsed by the ResourceReferenceResolver<ExtendedURL> component,
-                // we're currently simply ignoring normalization in this case.
-                if (extendedURL.getURI().getRawFragment() != null) {
-                    // Abort normalization
-                    normalizedReference = originalReference;
                 }
             }
         }
