@@ -59,7 +59,7 @@
 {{velocity}}
 #set ($configurationDocument = $xwiki.getDocument('URLNormalizer.Code.Configuration'))
 
-{{html}}
+{{html clean="false"}}
 #set ($discard = $xwiki.jsx.use('URLNormalizer.Code.URLNormalizerAdminSection'))
 #set ($filtersDocument = $xwiki.getDocument('URLNormalizer.Code.Configuration'))
 #set ($formToken = $services.csrf.getToken())
@@ -91,62 +91,58 @@
 
 == {{translation key="urlnormalizer.admin.normalize"/}}
 
-{{job id="URLNormalizer.Code.URLNormalizerAdminSection" start="{{velocity}}$request.confirm{{/velocity}}"}}
-{{velocity}}
-#set($logger = $services.logging.getLogger($doc.fullName))
-#set($discard = $services.logging.setLevel($doc.fullName, 'INFO'))
+{{template name="job_macros.vm"/}}
 
-#if ($services.security.authorization.hasAccess('admin', $services.wiki.currentWikiId))
-  #if ($request.createNewVersion == '0')
-    #set($createNewVersion = false)
+{{velocity output="false"}}
+#if ($request.startNormalizeJob)
+  #set ($createNewVersion = $request.createNewVersion != '0')
+  ## Make sure the current use has ADMIN right when disabling version creation
+  #if (!$createNewVersion &amp;&amp; !$services.security.authorization.hasAccess('admin', "wiki:$xcontext.database"))
+    {{error}}{{translation key="urlnormalizer.admin.forbiddenNoCreateNewVersion"/}}{{/error}}
   #else
-    #set($createNewVersion = true)
+    #set ($job = $services.urlnormalizer.startNormalizeJob($xcontext.database, $createNewVersion))
   #end
-
-  #set($documents = $services.query.hql('select doc.fullName from XWikiDocument doc group by doc.fullName').execute())
-  #set($discard = $logger.info('Found [{}] documents.', $documents.size()))
-  #foreach ($fullName in $documents)
-    #set($documentReference = $services.model.resolveDocument($fullName))
-    #set($discard = $logger.debug('Inspecting document [{}]', $documentReference))
-
-    #if($services.urlnormalizer.normalize($documentReference, $createNewVersion))
-      #set($discard = $logger.info('The document [{}] has been normalized.', $documentReference))
-    #end
-  #end
-#else
-  #set($discard = $logger.error('This jobs requires the current user to be an administrator of the wiki.'))
 #end
 {{/velocity}}
-{{/job}}
 
 {{velocity}}
   #set($jobStatus = $services.job.getJobStatus(['URLNormalizer.Code.URLNormalizerAdminSection']))
   #if (!$jobStatus || $jobStatus.state == 'FINISHED')
     {{html clean="false"}}
     &lt;form action="#" method="post" class="xform"&gt;
-      &lt;dl&gt;
-        &lt;dt&gt;
-          &lt;label for="urlNormalizerNewVersions"&gt;$escapetool.xml($services.localization.render('urlnormalizer.admin.createNewVersions'))&lt;/label&gt;
-          &lt;span class="xHint"&gt;$escapetool.xml($services.localization.render('urlnormalizer.admin.createNewVersions.hint'))&lt;/span&gt;
-        &lt;/dt&gt;
-        &lt;dd&gt;
-          &lt;input id="createNewVersionYes" type="radio" name="createNewVersion" value="1" checked/&gt;
-          &lt;label for="createNewVersionYes"&gt;$escapetool.xml($services.localization.render('urlnormalizer.admin.createNewVersionYes'))&lt;/label&gt;
-        &lt;/dd&gt;
-        &lt;dd&gt;
-          &lt;input id="createNewVersionNo" type="radio" name="createNewVersion" value="0"/&gt;
-          &lt;label for="createNewVersionNo"&gt;$escapetool.xml($services.localization.render('urlnormalizer.admin.createNewVersionNo'))&lt;/label&gt;
-        &lt;/dd&gt;
-      &lt;/dl&gt;
+      #if ($services.security.authorization.hasAccess('admin', "wiki:$xcontext.database"))
+        &lt;dl&gt;
+          &lt;dt&gt;
+            &lt;label for="urlNormalizerNewVersions"&gt;$escapetool.xml($services.localization.render('urlnormalizer.admin.createNewVersions'))&lt;/label&gt;
+            &lt;span class="xHint"&gt;$escapetool.xml($services.localization.render('urlnormalizer.admin.createNewVersions.hint'))&lt;/span&gt;
+          &lt;/dt&gt;
+          &lt;dd&gt;
+            &lt;input id="createNewVersionYes" type="radio" name="createNewVersion" value="1" checked/&gt;
+            &lt;label for="createNewVersionYes"&gt;$escapetool.xml($services.localization.render('urlnormalizer.admin.createNewVersionYes'))&lt;/label&gt;
+          &lt;/dd&gt;
+          &lt;dd&gt;
+            &lt;input id="createNewVersionNo" type="radio" name="createNewVersion" value="0"/&gt;
+            &lt;label for="createNewVersionNo"&gt;$escapetool.xml($services.localization.render('urlnormalizer.admin.createNewVersionNo'))&lt;/label&gt;
+          &lt;/dd&gt;
+        &lt;/dl&gt;
+      #end
       &lt;p&gt;
-        &lt;input type="hidden" name="confirm" value="true"/&gt;
         &lt;span class="buttonwrapper"&gt;
-          &lt;input class="button" type="submit" value="$escapetool.xml($services.localization.render('urlnormalizer.admin.submit'))"/&gt;
+          &lt;input class="button" type="submit" name="startNormalizeJob" value="$escapetool.xml($services.localization.render('urlnormalizer.admin.submit'))"/&gt;
         &lt;/span&gt;
       &lt;/p&gt;
     &lt;/form&gt;
     {{/html}}
   #end
+{{/velocity}}
+
+{{velocity}}
+#set ($jobStatus = $services.urlnormalizer.getNormalizeJobStatus($xcontext.database))
+#if ($jobStatus)
+  {{html clean="false"}}
+    #displayJobStatus ($jobStatus)
+  {{/html}}
+#end
 {{/velocity}}</content>
   <object>
     <name>URLNormalizer.Code.URLNormalizerAdminSection</name>

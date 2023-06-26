@@ -56,6 +56,7 @@ urlnormalizer.admin.createNewVersions.hint=Defines if a new version of the docum
 urlnormalizer.admin.createNewVersionYes=Yes
 urlnormalizer.admin.createNewVersionNo=No
 urlnormalizer.admin.submit=Start normalization
+urlnormalizer.admin.forbiddenNoCreateNewVersion=You are not allowed to normalize URLs without adding a new version to the documents.
 
 URLNormalizer.Code.FilterClass_sourceType=Source type
 URLNormalizer.Code.FilterClass_sourceType_hint=The type of the link to convert (url, path, etc.).

@@ -19,6 +19,7 @@
  */
 package org.xwiki.contrib.urlnormalizer.internal;
 
+import java.util.Collection;
 import java.util.List;
 
 import javax.inject.Named;
@@ -57,8 +58,10 @@ public class ObjectDocumentNormalizer extends AbstractObjectDocumentNormalizer
 
         for (List<BaseObject> objects : document.getXObjects().values()) {
             for (BaseObject object : objects) {
-                for (BaseProperty<?> property : (List<BaseProperty>) object.getFieldList()) {
-                    modified |= normalize(property, parser, blockRenderer);
+                if (object != null) {
+                    for (BaseProperty<?> property : (Collection<BaseProperty<?>>) object.getFieldList()) {
+                        modified |= normalize(property, parser, blockRenderer);
+                    }
                 }
             }
         }

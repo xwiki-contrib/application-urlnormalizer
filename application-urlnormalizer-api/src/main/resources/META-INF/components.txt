@@ -11,3 +11,4 @@ org.xwiki.contrib.urlnormalizer.internal.URLNormalizerFilterClassInitializer
 org.xwiki.contrib.urlnormalizer.internal.URLNormalizerListener
 org.xwiki.contrib.urlnormalizer.internal.filter.URLNormalizerConfigurationInvalidationListener
 org.xwiki.contrib.urlnormalizer.internal.filter.URLNormalizerConfigurationStore
+org.xwiki.contrib.urlnormalizer.internal.job.NormalizeJob
