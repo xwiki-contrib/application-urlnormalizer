@@ -37,7 +37,65 @@
   <minorEdit>false</minorEdit>
   <syntaxId>xwiki/2.1</syntaxId>
   <hidden>true</hidden>
-  <content>{{velocity}}
+  <content>{{velocity output="false"}}
+#if ($request.normalizer_enabled_save)
+  #if ($request.normalizer_enabled == '1')
+    #set ($enabled = 1)
+  #elseif ($request.normalizer_enabled == '0')
+    #set ($enabled = 0)
+  #else
+    #set ($enabled = -1)
+  #end
+  #set ($configurationDocument = $xwiki.getDocument('URLNormalizer.Code.Configuration'))
+  #set ($configurationObject = $configurationDocument.getObject('URLNormalizer.Code.ConfigurationClass', true))
+  #set ($void = $configurationObject.set('enabled', $enabled))
+  #set ($void = $configurationDocument.save($services.localization.render('urlnormalizer.admin.enabled.saveComment')))
+#end
+
+#set ($configurationDocument = $xwiki.getDocument('URLNormalizer.Code.Configuration'))
+#set ($formToken = $services.csrf.getToken())
+#set ($formRedirect = $xwiki.requestURL)
+#set ($configurationSaveURL = $configurationDocument.getURL('save'))
+{{/velocity}}
+
+{{velocity}}
+{{html clean="false"}}
+&lt;form method="post" class="xform" action="#"&gt;
+  &lt;input type="hidden" name="xredirect" value="$escapetool.xml($formRedirect)"/&gt;
+  &lt;input type="hidden" name="form_token" value="$formToken"/&gt;
+
+  #set ($configurationObject = $configurationDocument.getObject('URLNormalizer.Code.ConfigurationClass', true))
+  #set ($property = $configurationObject.getProperty('enabled'))
+  #set ($propertyClass = $configurationObject.getxWikiClass().get('enabled'))
+  #set ($propertyId = "URLNormalizer.Code.FilterClass_${configurationObject.number}_enabled")
+  &lt;dl&gt;
+    &lt;dt&gt;&lt;label for="normalizer_enabled"&gt;$escapetool.xml($propertyClass.translatedPrettyName)&lt;/label&gt;&lt;/dt&gt;
+    &lt;dd&gt;
+      &lt;select id="normalizer_enabled" name="normalizer_enabled"&gt;
+        #if (!$xcontext.isMainWiki())
+          #if ($services.urlnormalizer.isEnabled($xcontext.mainWikiName))
+            #set ($defaultEnabled = $services.localization.render('yes'))
+          #else
+            #set ($defaultEnabled = $services.localization.render('no'))
+          #end
+          &lt;option value=""&gt;$escapetool.xml($services.localization.render('urlnormalizer.admin.enabled.default', [$defaultEnabled]))&lt;/option&gt;
+          &lt;option value="1"#if($property.value == 1) selected#end&gt;$escapetool.xml($services.localization.render('yes'))&lt;/option&gt;
+        #else
+          &lt;option value="1"#if($property.value != 0) selected#end&gt;$escapetool.xml($services.localization.render('yes'))&lt;/option&gt;
+        #end
+        &lt;option value="0"#if($property.value == 0) selected#end&gt;$escapetool.xml($services.localization.render('no'))&lt;/option&gt;
+      &lt;/select&gt;
+    &lt;/dd&gt;
+  &lt;/dl&gt;
+
+  &lt;button class="btn btn-primary" name="normalizer_enabled_save"&gt;$escapetool.xml($services.localization.render('urlnormalizer.admin.save'))&lt;/button&gt;
+&lt;/form&gt;
+{{/html}}
+{{/velocity}}
+
+== {{translation key="urlnormalizer.admin.filters.title"/}}
+
+{{velocity}}
 #macro(editFilterProperty $obj $propertyName)
     #set ($property = $obj.getProperty($propertyName))
     #set ($propertyClass = $obj.getxWikiClass().get($propertyName))
@@ -52,19 +110,11 @@
 #end
 {{/velocity}}
 
-== {{translation key="urlnormalizer.admin.filters.title"/}}
-
 {{translation key="urlnormalizer.admin.filters.description"/}}
 
 {{velocity}}
-#set ($configurationDocument = $xwiki.getDocument('URLNormalizer.Code.Configuration'))
-
 {{html clean="false"}}
-#set ($discard = $xwiki.jsx.use('URLNormalizer.Code.URLNormalizerAdminSection'))
-#set ($filtersDocument = $xwiki.getDocument('URLNormalizer.Code.Configuration'))
-#set ($formToken = $services.csrf.getToken())
-#set ($formRedirect = $xwiki.requestURL)
-&lt;form id="url_filters" method="post" class="xform" action="$escapetool.xml($filtersDocument.getURL('save'))"&gt;
+&lt;form method="post" class="xform" action="$escapetool.xml($configurationSaveURL)"&gt;
   &lt;input type="hidden" name="xredirect" value="$escapetool.xml($formRedirect)"/&gt;
   &lt;input type="hidden" name="form_token" value="$formToken"/&gt;
 
@@ -76,12 +126,12 @@
         #editFilterProperty($filterObject, 'targetType')
         #editFilterProperty($filterObject, 'targetReference')
       &lt;/dl&gt;
-      &lt;a href="$filtersDocument.getURL('objectremove', "form_token=$formToken&amp;amp;classname=URLNormalizer.Code.FilterClass&amp;amp;classid=${filterObject.number}&amp;amp;xredirect=${escapetool.url($formRedirect)}")" class="filter-action-delete" title="$services.localization.render('urlnormalizer.admin.filters.removeFilter.tooltip')"&gt;$services.localization.render('urlnormalizer.admin.filters.removeFilter')&lt;/a&gt;
+      &lt;a href="$configurationDocument.getURL('objectremove', "form_token=$formToken&amp;amp;classname=URLNormalizer.Code.FilterClass&amp;amp;classid=${filterObject.number}&amp;amp;xredirect=${escapetool.url($formRedirect)}")" class="filter-action-delete" title="$services.localization.render('urlnormalizer.admin.filters.removeFilter.tooltip')"&gt;$services.localization.render('urlnormalizer.admin.filters.removeFilter')&lt;/a&gt;
     &lt;/fieldset&gt;
   #end
 
   &lt;p&gt;
-    &lt;a href="$filtersDocument.getURL('objectadd', "form_token=$formToken&amp;amp;classname=URLNormalizer.Code.FilterClass&amp;amp;xredirect=${escapetool.url($formRedirect)}")" class="filter-action-add" title="$services.localization.render('urlnormalizer.admin.filters.addFilter')"&gt;$services.localization.render('urlnormalizer.admin.filters.addFilter')&lt;/a&gt;
+    &lt;a href="$configurationDocument.getURL('objectadd', "form_token=$formToken&amp;amp;classname=URLNormalizer.Code.FilterClass&amp;amp;xredirect=${escapetool.url($formRedirect)}")" class="filter-action-add" title="$services.localization.render('urlnormalizer.admin.filters.addFilter')"&gt;$services.localization.render('urlnormalizer.admin.filters.addFilter')&lt;/a&gt;
   &lt;/p&gt;
 
   &lt;button class="btn btn-primary"&gt;$escapetool.xml($services.localization.render('urlnormalizer.admin.filters.save'))&lt;/button&gt;

@@ -17,23 +17,22 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.xwiki.contrib.urlnormalizer.internal.filter;
+package org.xwiki.contrib.urlnormalizer.internal.configuration;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
+import org.xwiki.bridge.event.DocumentCreatedEvent;
+import org.xwiki.bridge.event.DocumentDeletedEvent;
+import org.xwiki.bridge.event.DocumentUpdatedEvent;
 import org.xwiki.bridge.event.WikiDeletedEvent;
 import org.xwiki.component.annotation.Component;
-import org.xwiki.contrib.urlnormalizer.internal.URLNormalizerFilterClassInitializer;
 import org.xwiki.observation.AbstractEventListener;
 import org.xwiki.observation.event.Event;
+import org.xwiki.observation.event.filter.RegexEventFilter;
 
 import com.xpn.xwiki.doc.XWikiDocument;
-import com.xpn.xwiki.internal.event.XObjectAddedEvent;
-import com.xpn.xwiki.internal.event.XObjectDeletedEvent;
-import com.xpn.xwiki.internal.event.XObjectUpdatedEvent;
-import com.xpn.xwiki.objects.BaseObjectReference;
 
 /**
  * Listener in charge of invalidating the configuration cache.
@@ -50,7 +49,13 @@ public class URLNormalizerConfigurationInvalidationListener extends AbstractEven
      * The name of the listener.
      */
     public static final String NAME =
-        "org.xwiki.contrib.urlnormalizer.internal.filter.URLNormalizerConfigurationInvalidationListener";
+        "org.xwiki.contrib.urlnormalizer.internal.configuration.URLNormalizerConfigurationInvalidationListener";
+
+    private static final String DOCUMENT_REGEX = ".*:" + AbstractURLNormalizerClassInitializer.URLNORMALIZER_SPACE_NAME
+        + '.' + AbstractURLNormalizerClassInitializer.CODE_SPACE_NAME + '.'
+        + URLNormalizerConfigurationStore.CONFIGURATION_NAME;
+
+    private static final RegexEventFilter DOCUMENT_REGEX_FILTER = new RegexEventFilter(DOCUMENT_REGEX);
 
     @Inject
     private URLNormalizerConfigurationStore store;
@@ -60,10 +65,8 @@ public class URLNormalizerConfigurationInvalidationListener extends AbstractEven
      */
     public URLNormalizerConfigurationInvalidationListener()
     {
-        super(NAME, new WikiDeletedEvent(),
-            new XObjectAddedEvent(BaseObjectReference.any(URLNormalizerFilterClassInitializer.CLASS_FULLNAME)),
-            new XObjectUpdatedEvent(BaseObjectReference.any(URLNormalizerFilterClassInitializer.CLASS_FULLNAME)),
-            new XObjectDeletedEvent(BaseObjectReference.any(URLNormalizerFilterClassInitializer.CLASS_FULLNAME)));
+        super(NAME, new WikiDeletedEvent(), new DocumentCreatedEvent(DOCUMENT_REGEX_FILTER),
+            new DocumentUpdatedEvent(DOCUMENT_REGEX_FILTER), new DocumentDeletedEvent(DOCUMENT_REGEX_FILTER));
     }
 
     @Override

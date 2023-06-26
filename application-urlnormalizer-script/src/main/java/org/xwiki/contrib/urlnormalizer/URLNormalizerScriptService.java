@@ -33,6 +33,7 @@ import org.xwiki.bridge.DocumentAccessBridge;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.component.manager.ComponentLookupException;
 import org.xwiki.context.concurrent.ContextStoreManager;
+import org.xwiki.contrib.urlnormalizer.internal.configuration.URLNormalizerConfigurationStore;
 import org.xwiki.contrib.urlnormalizer.internal.job.NormalizeJob;
 import org.xwiki.contrib.urlnormalizer.internal.job.NormalizeJobRequest;
 import org.xwiki.job.Job;
@@ -83,6 +84,9 @@ public class URLNormalizerScriptService implements ScriptService
 
     @Inject
     private URLNormalizationManager urlNormalizationManager;
+
+    @Inject
+    private URLNormalizerConfigurationStore configuration;
 
     @Inject
     private Provider<XWikiContext> xcontextProvider;
@@ -215,5 +219,26 @@ public class URLNormalizerScriptService implements ScriptService
             // Only wiki admins are allowed to modify a document without incrementing the version
             this.authorizationManager.checkAccess(Right.ADMIN, xcontext.getAuthorReference(), entity);
         }
+    }
+
+    /**
+     * @return true if the normalizer is enabled in the current wiki
+     * @throws NormalizationException when failing to load the configuration
+     * @since 1.8.0
+     */
+    public boolean isEnabled() throws NormalizationException
+    {
+        return isEnabled(this.xcontextProvider.get().getWikiReference());
+    }
+
+    /**
+     * @param wiki the identifier of the wiki
+     * @return true if the normalizer is enabled in the passed wiki
+     * @throws NormalizationException when failing to load the configuration
+     * @since 1.8.0
+     */
+    public boolean isEnabled(WikiReference wiki) throws NormalizationException
+    {
+        return this.configuration.isEnabled(wiki);
     }
 }

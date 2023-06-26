@@ -7,8 +7,9 @@ org.xwiki.contrib.urlnormalizer.internal.MacroXDOMNormalizer
 org.xwiki.contrib.urlnormalizer.internal.ModifiedObjectDocumentNormalizer
 org.xwiki.contrib.urlnormalizer.internal.ObjectDocumentNormalizer
 org.xwiki.contrib.urlnormalizer.internal.SupportedActionURLValidator
-org.xwiki.contrib.urlnormalizer.internal.URLNormalizerFilterClassInitializer
 org.xwiki.contrib.urlnormalizer.internal.URLNormalizerListener
-org.xwiki.contrib.urlnormalizer.internal.filter.URLNormalizerConfigurationInvalidationListener
-org.xwiki.contrib.urlnormalizer.internal.filter.URLNormalizerConfigurationStore
+org.xwiki.contrib.urlnormalizer.internal.configuration.URLNormalizerConfigurationClassInitializer
+org.xwiki.contrib.urlnormalizer.internal.configuration.URLNormalizerConfigurationInvalidationListener
+org.xwiki.contrib.urlnormalizer.internal.configuration.URLNormalizerConfigurationStore
+org.xwiki.contrib.urlnormalizer.internal.configuration.URLNormalizerFilterClassInitializer
 org.xwiki.contrib.urlnormalizer.internal.job.NormalizeJob

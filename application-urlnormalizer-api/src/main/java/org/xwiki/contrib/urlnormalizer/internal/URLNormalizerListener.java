@@ -23,6 +23,7 @@ import java.util.Arrays;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.inject.Provider;
 import javax.inject.Singleton;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -32,6 +33,7 @@ import org.xwiki.bridge.event.DocumentUpdatingEvent;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.urlnormalizer.NormalizationException;
 import org.xwiki.contrib.urlnormalizer.URLNormalizationManager;
+import org.xwiki.contrib.urlnormalizer.internal.configuration.URLNormalizerConfigurationStore;
 import org.xwiki.observation.AbstractEventListener;
 import org.xwiki.observation.event.Event;
 
@@ -57,7 +59,10 @@ public class URLNormalizerListener extends AbstractEventListener
     private Logger logger;
 
     @Inject
-    private URLNormalizationManager urlNormalizationManager;
+    private Provider<URLNormalizationManager> urlNormalizationManagerProvider;
+
+    @Inject
+    private Provider<URLNormalizerConfigurationStore> configurationProvider;
 
     /**
      * Builds a new {@link URLNormalizerListener}.
@@ -72,15 +77,27 @@ public class URLNormalizerListener extends AbstractEventListener
     {
         XWikiDocument document = (XWikiDocument) source;
 
-        // Save the metaDataDirty and contentDirty variables so that, in the event where the document save is called
-        // by a script that doesn't want to create new versions in the document history, we don't screw the script
-        // behavior.
-        // TODO: In the future, make this a customizable property of the application
+        // Check if normalization is enabled
+        try {
+            if (this.configurationProvider.get().isEnabled(document.getDocumentReference().getWikiReference())) {
+                normalize(document);
+            }
+        } catch (NormalizationException e) {
+            this.logger.error("Failed to load the configuration", e);
+        }
+    }
+
+    private void normalize(XWikiDocument document)
+    {
+        // Save the metaDataDirty and contentDirty variables so that, in the event where the document save is
+        // called by a script that doesn't want to create new versions in the document history, we don't screw
+        // the script behavior.
+        // TODO: Remove it when upgrading to a version which contains https://jira.xwiki.org/browse/XWIKI-20916
         boolean metaDataDirty = document.isMetaDataDirty();
         boolean contentDirty = document.isContentDirty();
 
         try {
-            this.urlNormalizationManager.normalize(document,
+            this.urlNormalizationManagerProvider.get().normalize(document,
                 Arrays.asList(ContentDocumentNormalizer.HINT, ModifiedObjectDocumentNormalizer.HINT));
         } catch (NormalizationException e) {
             this.logger.warn("Unable to normalize URLs for document [{}]. Root error [{}]",

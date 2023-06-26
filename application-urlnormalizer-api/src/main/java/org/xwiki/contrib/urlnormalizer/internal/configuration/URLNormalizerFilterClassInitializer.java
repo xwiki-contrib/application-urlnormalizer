@@ -17,7 +17,7 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.xwiki.contrib.urlnormalizer.internal;
+package org.xwiki.contrib.urlnormalizer.internal.configuration;
 
 import javax.inject.Named;
 import javax.inject.Singleton;
@@ -27,7 +27,6 @@ import org.xwiki.model.EntityType;
 import org.xwiki.model.reference.EntityReference;
 import org.xwiki.model.reference.LocalDocumentReference;
 
-import com.xpn.xwiki.doc.AbstractMandatoryClassInitializer;
 import com.xpn.xwiki.objects.classes.BaseClass;
 import com.xpn.xwiki.objects.classes.TextAreaClass.ContentType;
 
@@ -40,18 +39,8 @@ import com.xpn.xwiki.objects.classes.TextAreaClass.ContentType;
 @Component
 @Named(URLNormalizerFilterClassInitializer.CLASS_FULLNAME)
 @Singleton
-public class URLNormalizerFilterClassInitializer extends AbstractMandatoryClassInitializer
+public class URLNormalizerFilterClassInitializer extends AbstractURLNormalizerClassInitializer
 {
-    /**
-     * The name of the space containing all URL Normalizer pages.
-     */
-    public static final String URLNORMALIZER_SPACE_NAME = "URLNormalizer";
-
-    /**
-     * The name of the space containing all URL Normalizer technical pages.
-     */
-    public static final String CODE_SPACE_NAME = "Code";
-
     /**
      * The name of the class defining the a global URL filter.
      */
@@ -95,12 +84,6 @@ public class URLNormalizerFilterClassInitializer extends AbstractMandatoryClassI
     public URLNormalizerFilterClassInitializer()
     {
         super(CLASS_REFERENCE, "URL Normalizer Filter Class");
-    }
-
-    @Override
-    protected boolean isMainWikiOnly()
-    {
-        return true;
     }
 
     @Override

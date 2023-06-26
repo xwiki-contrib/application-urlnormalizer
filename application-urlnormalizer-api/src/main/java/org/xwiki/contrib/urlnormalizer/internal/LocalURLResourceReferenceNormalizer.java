@@ -40,7 +40,7 @@ import org.xwiki.contrib.urlnormalizer.NormalizationException;
 import org.xwiki.contrib.urlnormalizer.ResourceReferenceNormalizer;
 import org.xwiki.contrib.urlnormalizer.URLNormalizerFilter;
 import org.xwiki.contrib.urlnormalizer.URLValidator;
-import org.xwiki.contrib.urlnormalizer.internal.filter.URLNormalizerConfigurationStore;
+import org.xwiki.contrib.urlnormalizer.internal.configuration.URLNormalizerConfigurationStore;
 import org.xwiki.model.EntityType;
 import org.xwiki.model.reference.EntityReferenceSerializer;
 import org.xwiki.rendering.listener.reference.ResourceReference;
