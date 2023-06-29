@@ -35,6 +35,7 @@ import org.xwiki.cache.Cache;
 import org.xwiki.cache.CacheManager;
 import org.xwiki.cache.config.LRUCacheConfiguration;
 import org.xwiki.component.annotation.Component;
+import org.xwiki.component.phase.Disposable;
 import org.xwiki.component.phase.Initializable;
 import org.xwiki.component.phase.InitializationException;
 import org.xwiki.contrib.urlnormalizer.NormalizationException;
@@ -59,7 +60,7 @@ import com.xpn.xwiki.objects.BaseObject;
  */
 @Component(roles = URLNormalizerConfigurationStore.class)
 @Singleton
-public class URLNormalizerConfigurationStore implements Initializable
+public class URLNormalizerConfigurationStore implements Initializable, Disposable
 {
     /**
      * The name of the page containing the wiki configuration of the normalizer.
@@ -236,6 +237,12 @@ public class URLNormalizerConfigurationStore implements Initializable
         String value = StringUtils.defaultIfEmpty(filterObject.getStringValue(name), null);
 
         return StringUtils.isEmpty(value) ? null : new ResourceType(value);
+    }
+
+    @Override
+    public void dispose()
+    {
+        this.cache.dispose();
     }
 
     /**
