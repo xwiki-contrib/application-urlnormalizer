@@ -20,6 +20,6 @@ Convert local URLs into wiki links
 * Release
 
 ```
-mvn release:prepare -Pintegration-tests
-mvn release:perform -Pintegration-tests
+mvn release:prepare -Pintegration-tests,docker
+mvn release:perform -Pintegration-tests,docker
 ```
