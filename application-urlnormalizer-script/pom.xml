@@ -25,7 +25,7 @@
   <parent>
     <groupId>org.xwiki.contrib</groupId>
     <artifactId>application-urlnormalizer</artifactId>
-    <version>1.8.2</version>
+    <version>1.8.3-SNAPSHOT</version>
   </parent>
   <artifactId>application-urlnormalizer-script</artifactId>
   <name>Wiki Link URL Normalizer - Script Service</name>
