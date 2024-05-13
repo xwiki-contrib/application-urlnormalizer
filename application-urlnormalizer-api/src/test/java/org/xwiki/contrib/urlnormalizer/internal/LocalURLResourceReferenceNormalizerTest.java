@@ -256,6 +256,18 @@ class LocalURLResourceReferenceNormalizerTest
     }
 
     @Test
+    void normalizeWithAFilterWithNullLinkType() throws Exception
+    {
+        when(this.store.getFilters(null)).thenReturn(Arrays.asList(
+            new DefaultURLNormalizerFilter(null, Pattern.compile("re(.*)"), ResourceType.DOCUMENT, "filtered-${1}")));
+
+        assertEquals(new ResourceReference("filtered-ference", ResourceType.DOCUMENT),
+            this.normalizer.normalize(new ResourceReference("reference", ResourceType.DOCUMENT)));
+        assertEquals(new ResourceReference("filtered-ference", ResourceType.DOCUMENT),
+            this.normalizer.normalize(new ResourceReference("reference", ResourceType.DATA)));
+    }
+
+    @Test
     void normalizeWhenDisablingURLPointsToWikiLink() throws Exception
     {
         when(this.store.getFilters(null)).thenReturn(Arrays.asList(

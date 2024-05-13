@@ -96,7 +96,7 @@ public class LocalURLResourceReferenceNormalizer implements ResourceReferenceNor
 
         // Try each configured filter
         for (URLNormalizerFilter filter : filters) {
-            if (filter.getLinkType().equals(sourceReference.getType())) {
+            if (filter.getLinkType() == null || filter.getLinkType().equals(sourceReference.getType())) {
                 // Try to match the reference with the configured regex
                 Matcher matcher = filter.getLinkReference().matcher(sourceReference.getReference());
 
