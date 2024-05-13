@@ -28,7 +28,7 @@
     <version>12.10-1</version>
   </parent>
   <artifactId>application-urlnormalizer</artifactId>
-  <version>1.8.2-SNAPSHOT</version>
+  <version>1.8.2</version>
   <name>Wiki Link URL Normalizer - Parent POM</name>
   <packaging>pom</packaging>
   <description>Convert local URLs into wiki links</description>
@@ -36,7 +36,7 @@
     <connection>scm:git:git://github.com/xwiki-contrib/application-urlnormalizer.git</connection>
     <developerConnection>scm:git:git@github.com:xwiki-contrib/application-urlnormalizer.git</developerConnection>
     <url>https://github.com/xwiki-contrib/application-urlnormalizer</url>
-    <tag>HEAD</tag>
+    <tag>application-urlnormalizer-1.8.2</tag>
   </scm>
   <developers>
     <developer>
