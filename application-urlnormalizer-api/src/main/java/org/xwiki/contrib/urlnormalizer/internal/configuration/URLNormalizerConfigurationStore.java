@@ -133,7 +133,7 @@ public class URLNormalizerConfigurationStore implements Initializable, Disposabl
     }
 
     /**
-     * @param wiki the identifier of wiki
+     * @param wiki the reference of the wiki
      * @return the configuration for the passed wiki
      * @throws NormalizationException when failing to load the configuration
      */
