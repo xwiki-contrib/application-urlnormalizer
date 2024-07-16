@@ -33,6 +33,9 @@
     <xwiki.extension.category>api</xwiki.extension.category>
 
     <xwiki.jacoco.instructionRatio>0.48</xwiki.jacoco.instructionRatio>
+
+    <!-- Various listeners and caches needs to be unique in a single XWiki instances -->
+    <xwiki.extension.namespaces>{root}</xwiki.extension.namespaces>
   </properties>
   <dependencies>
     <dependency>
