@@ -68,9 +68,11 @@ public class ModifiedObjectDocumentNormalizer extends AbstractObjectDocumentNorm
             for (ObjectDiff objectDiff : objectDiffs) {
                 if (objectDiff.getPropType().equals(TEXT_AREA)) {
                     BaseObject object = document.getXObject(objectDiff.getXClassReference(), objectDiff.getNumber());
-                    BaseProperty<?> property = (BaseProperty) object.getField(objectDiff.getPropName());
+                    if (object != null) {
+                        BaseProperty<?> property = (BaseProperty) object.getField(objectDiff.getPropName());
 
-                    modified |= normalize(property, parser, blockRenderer);
+                        modified |= normalize(property, parser, blockRenderer);
+                    }
                 }
             }
         }
