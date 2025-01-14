@@ -62,6 +62,10 @@ public class MacroXDOMNormalizer implements XDOMNormalizer
     @Named("link")
     private XDOMNormalizer linkXDOMNormalizer;
 
+    @Inject
+    @Named("image")
+    private XDOMNormalizer imageXDOMNormalizer;
+
     private Syntax getSyntax(XDOM xdom, Parser parser)
     {
         Syntax syntax = (Syntax) xdom.getMetaData().getMetaData(MetaData.SYNTAX);
@@ -100,6 +104,7 @@ public class MacroXDOMNormalizer implements XDOMNormalizer
                 XDOM xdom = parser.parse(new StringReader(content));
 
                 boolean modified = this.linkXDOMNormalizer.normalize(xdom, parser, blockRenderer);
+                modified |= this.imageXDOMNormalizer.normalize(xdom, parser, blockRenderer);
                 if (modified) {
                     WikiPrinter wikiPrinter = new DefaultWikiPrinter();
                     blockRenderer.render(xdom, wikiPrinter);

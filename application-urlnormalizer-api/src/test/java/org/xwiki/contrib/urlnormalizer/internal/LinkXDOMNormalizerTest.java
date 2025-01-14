@@ -50,42 +50,17 @@ import static org.mockito.Mockito.when;
  * @since 1.3
  * @version $Id$
  */
-public class LinkXDOMNormalizerTest
+public class LinkXDOMNormalizerTest extends AbstractResourceReferenceXDOMNormalizerTest
 {
     @Rule
     public final MockitoComponentMockingRule<LinkXDOMNormalizer> mocker =
             new MockitoComponentMockingRule<>(LinkXDOMNormalizer.class);
 
-    private ResourceReferenceNormalizer resourceReferenceNormalizer;
-
-    // A link to the wiki written as a standard wiki link
-    private ResourceReference internalLinkReference;
-
-    // A link to the wiki written with an absolute URL
-    private ResourceReference externalLinkReference;
-
-    private ResourceReference normalizedExternalLinkReference;
-
-    private Block parentBlock;
-
     @Before
     public void setUp() throws Exception
     {
         resourceReferenceNormalizer = mocker.registerMockComponent(ResourceReferenceNormalizer.class);
-
-        parentBlock = new ParagraphBlock(new ArrayList<>());
-
-        internalLinkReference = mock(ResourceReference.class);
-        when(internalLinkReference.getReference()).thenReturn("Internal reference");
-
-        externalLinkReference = mock(ResourceReference.class);
-        when(externalLinkReference.getReference()).thenReturn("External reference");
-
-        normalizedExternalLinkReference = mock(ResourceReference.class);
-        when(normalizedExternalLinkReference.getReference()).thenReturn("External normalized link reference");
-
-        when(resourceReferenceNormalizer.normalize(internalLinkReference)).thenReturn(internalLinkReference);
-        when(resourceReferenceNormalizer.normalize(externalLinkReference)).thenReturn(normalizedExternalLinkReference);
+        super.setUp();
     }
 
     private List<LinkBlock> mockLinkBlocks(List<ResourceReference> resourceReferences,

@@ -54,6 +54,10 @@ public class ContentDocumentNormalizer implements DocumentNormalizer
     private XDOMNormalizer linkXDOMNormalizer;
 
     @Inject
+    @Named("image")
+    private XDOMNormalizer imageXDOMNormalizer;
+
+    @Inject
     @Named("macro")
     private XDOMNormalizer macroXDOMNormalizer;
 
@@ -64,6 +68,7 @@ public class ContentDocumentNormalizer implements DocumentNormalizer
         XDOM xdom = document.getXDOM();
 
         boolean modified = this.linkXDOMNormalizer.normalize(xdom, parser, blockRenderer);
+        modified |= this.imageXDOMNormalizer.normalize(xdom, parser, blockRenderer);
         modified |= this.macroXDOMNormalizer.normalize(xdom, parser, blockRenderer);
 
         if (modified) {

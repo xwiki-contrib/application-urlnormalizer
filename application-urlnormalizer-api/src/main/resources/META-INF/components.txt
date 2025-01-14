@@ -1,5 +1,6 @@
 org.xwiki.contrib.urlnormalizer.internal.ContentDocumentNormalizer
 org.xwiki.contrib.urlnormalizer.internal.DefaultURLNormalizationManager
+org.xwiki.contrib.urlnormalizer.internal.ImageXDOMNormalizer
 org.xwiki.contrib.urlnormalizer.internal.LinkXDOMNormalizer
 org.xwiki.contrib.urlnormalizer.internal.LocalURLResourceReferenceNormalizer
 org.xwiki.contrib.urlnormalizer.internal.LocalURLValidator

@@ -55,6 +55,10 @@ public abstract class AbstractObjectDocumentNormalizer implements DocumentNormal
     protected XDOMNormalizer linkXDOMNormalizer;
 
     @Inject
+    @Named("image")
+    protected XDOMNormalizer imageXDOMNormalizer;
+
+    @Inject
     @Named("macro")
     protected XDOMNormalizer macroXDOMNormalizer;
 
@@ -85,6 +89,7 @@ public abstract class AbstractObjectDocumentNormalizer implements DocumentNormal
                 XDOM xdom = parser.parse(new StringReader(content));
 
                 boolean modified = this.linkXDOMNormalizer.normalize(xdom, parser, blockRenderer);
+                modified |= this.imageXDOMNormalizer.normalize(xdom, parser, blockRenderer);
                 modified |= this.macroXDOMNormalizer.normalize(xdom, parser, blockRenderer);
 
                 if (modified) {
