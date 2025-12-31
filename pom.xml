@@ -75,6 +75,17 @@
   <build>
     <pluginManagement>
       <plugins>
+        <!-- TODO: remove when moving to a more standard (and so which include the workaround) parent version -->
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-failsafe-plugin</artifactId>
+          <configuration>
+            <systemPropertyVariables>
+              <!-- Docker 2.29+ requires at least 1.44 by default -->
+              <api.version>1.44</api.version>
+            </systemPropertyVariables>
+          </configuration>
+        </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-release-plugin</artifactId>
