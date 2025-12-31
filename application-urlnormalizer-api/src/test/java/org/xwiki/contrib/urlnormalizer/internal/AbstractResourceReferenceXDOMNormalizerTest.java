@@ -20,13 +20,9 @@
 package org.xwiki.contrib.urlnormalizer.internal;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
 
 import org.xwiki.contrib.urlnormalizer.ResourceReferenceNormalizer;
 import org.xwiki.rendering.block.Block;
-import org.xwiki.rendering.block.LinkBlock;
 import org.xwiki.rendering.block.ParagraphBlock;
 import org.xwiki.rendering.listener.reference.ResourceReference;
 
