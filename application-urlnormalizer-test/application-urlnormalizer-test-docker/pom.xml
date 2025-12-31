@@ -35,7 +35,7 @@
     <xwiki.surefire.captureconsole.skip>true</xwiki.surefire.captureconsole.skip>
 
     <!-- Lower version of Docker does not work anymore -->
-    <dockerJava.version>3.3.6</dockerJava.version>
+    <dockerJava.version>3.7.0</dockerJava.version>
   </properties>
   <dependencyManagement>
     <dependencies>
