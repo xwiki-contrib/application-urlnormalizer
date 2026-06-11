@@ -20,24 +20,20 @@
 package org.xwiki.contrib.urlnormalizer.internal;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.xwiki.contrib.urlnormalizer.ResourceReferenceNormalizer;
+import org.junit.jupiter.api.Test;
 import org.xwiki.rendering.block.ImageBlock;
 import org.xwiki.rendering.block.XDOM;
 import org.xwiki.rendering.listener.reference.ResourceReference;
-import org.xwiki.test.mockito.MockitoComponentMockingRule;
+import org.xwiki.test.junit5.mockito.InjectMockComponents;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Unit tests for {@link ImageXDOMNormalizer}.
@@ -45,18 +41,10 @@ import static org.junit.Assert.assertTrue;
  * @since 1.9.0
  * @version $Id$
  */
-public class ImageXDOMNormalizerTest extends AbstractResourceReferenceXDOMNormalizerTest
+class ImageXDOMNormalizerTest extends AbstractResourceReferenceXDOMNormalizerTest
 {
-    @Rule
-    public final MockitoComponentMockingRule<ImageXDOMNormalizer> mocker =
-        new MockitoComponentMockingRule<>(ImageXDOMNormalizer.class);
-
-    @Before
-    public void setUp() throws Exception
-    {
-        resourceReferenceNormalizer = mocker.registerMockComponent(ResourceReferenceNormalizer.class);
-        super.setUp();
-    }
+    @InjectMockComponents
+    private ImageXDOMNormalizer normalizer;
 
     private List<ImageBlock> mockImageBlocks(List<ResourceReference> resourceReferences,
         Map<String, String> imageBlockParameters)
@@ -66,33 +54,33 @@ public class ImageXDOMNormalizerTest extends AbstractResourceReferenceXDOMNormal
         for (ResourceReference resourceReference : resourceReferences) {
             ImageBlock newBlock = new ImageBlock(resourceReference, true, imageBlockParameters);
             imageBlocks.add(newBlock);
-            parentBlock.addChild(newBlock);
+            this.parentBlock.addChild(newBlock);
         }
 
         return imageBlocks;
     }
 
     @Test
-    public void normalizeImageBlocksWithOneExternalLink() throws Exception
+    void normalizeImageBlocksWithOneExternalLink()
     {
-        XDOM xdom = new XDOM(mockImageBlocks(Arrays.asList(externalLinkReference), Collections.emptyMap()));
+        XDOM xdom = new XDOM(mockImageBlocks(List.of(this.externalLinkReference), Map.of()));
 
-        boolean modified = mocker.getComponentUnderTest().normalize(xdom, null, null);
+        boolean modified = this.normalizer.normalize(xdom, null, null);
 
         assertTrue(modified);
-        assertTrue(xdom.getChildren().get(0) instanceof ImageBlock);
-        assertNotEquals(externalLinkReference, ((ImageBlock) xdom.getChildren().get(0)).getReference());
+        assertInstanceOf(ImageBlock.class, xdom.getChildren().get(0));
+        assertNotEquals(this.externalLinkReference, ((ImageBlock) xdom.getChildren().get(0)).getReference());
     }
 
     @Test
-    public void normalizeLinkBlocksWithOneInternalLink() throws Exception
+    void normalizeImageBlocksWithOneInternalLink()
     {
-        XDOM xdom = new XDOM(mockImageBlocks(Arrays.asList(internalLinkReference), Collections.emptyMap()));
+        XDOM xdom = new XDOM(mockImageBlocks(List.of(this.internalLinkReference), Map.of()));
 
-        boolean modified = mocker.getComponentUnderTest().normalize(xdom, null, null);
+        boolean modified = this.normalizer.normalize(xdom, null, null);
 
         assertFalse(modified);
-        assertTrue(xdom.getChildren().get(0) instanceof ImageBlock);
-        assertEquals(internalLinkReference, ((ImageBlock) xdom.getChildren().get(0)).getReference());
+        assertInstanceOf(ImageBlock.class, xdom.getChildren().get(0));
+        assertEquals(this.internalLinkReference, ((ImageBlock) xdom.getChildren().get(0)).getReference());
     }
 }

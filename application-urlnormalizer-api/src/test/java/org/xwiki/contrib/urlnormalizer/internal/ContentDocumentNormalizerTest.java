@@ -19,24 +19,26 @@
  */
 package org.xwiki.contrib.urlnormalizer.internal;
 
-import java.util.Collections;
+import java.util.List;
 
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import javax.inject.Named;
+
+import org.junit.jupiter.api.Test;
 import org.xwiki.rendering.block.Block;
 import org.xwiki.rendering.block.LinkBlock;
 import org.xwiki.rendering.block.XDOM;
 import org.xwiki.rendering.block.match.ClassBlockMatcher;
 import org.xwiki.rendering.parser.Parser;
 import org.xwiki.rendering.renderer.BlockRenderer;
-import org.xwiki.rendering.syntax.Syntax;
-import org.xwiki.test.mockito.MockitoComponentMockingRule;
+import org.xwiki.test.junit5.mockito.ComponentTest;
+import org.xwiki.test.junit5.mockito.InjectMockComponents;
+import org.xwiki.test.junit5.mockito.MockComponent;
 
 import com.xpn.xwiki.doc.XWikiDocument;
 
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Matchers.any;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -48,37 +50,35 @@ import static org.mockito.Mockito.when;
  * @version $Id$
  * @since 1.4
  */
-public class ContentDocumentNormalizerTest
+@ComponentTest
+class ContentDocumentNormalizerTest
 {
-    @Rule
-    public final MockitoComponentMockingRule<ContentDocumentNormalizer> mocker =
-        new MockitoComponentMockingRule<>(ContentDocumentNormalizer.class);
+    @InjectMockComponents
+    private ContentDocumentNormalizer normalizer;
 
-
-    private BlockRenderer blockRenderer;
-
-    private Parser parser;
-
+    @MockComponent
+    @Named("link")
     private XDOMNormalizer linkXDOMNormalizer;
 
+    @MockComponent
+    @Named("image")
+    private XDOMNormalizer imageXDOMNormalizer;
+
+    @MockComponent
+    @Named("macro")
     private XDOMNormalizer macroXDOMNormalizer;
 
-    @Before
-    public void setUp() throws Exception
-    {
-        this.parser = this.mocker.registerMockComponent(Parser.class, Syntax.XWIKI_2_1.toIdString());
-        this.blockRenderer = this.mocker.registerMockComponent(BlockRenderer.class, Syntax.XWIKI_2_1.toIdString());
-        this.linkXDOMNormalizer = this.mocker.registerMockComponent(XDOMNormalizer.class, "link");
-        this.macroXDOMNormalizer = this.mocker.registerMockComponent(XDOMNormalizer.class, "macro");
-    }
+    private final Parser parser = mock(Parser.class);
+
+    private final BlockRenderer blockRenderer = mock(BlockRenderer.class);
 
     @Test
-    public void normalizeWithNoLinksInContent() throws Exception
+    void normalizeWithNoLinksInContent() throws Exception
     {
-        XDOM xdom = new XDOM(Collections.emptyList());
+        XDOM xdom = new XDOM(List.of());
         XWikiDocument fakeDocument = URLNormalizationHelper.mockXWikiDocument(xdom);
 
-        this.mocker.getComponentUnderTest().normalize(fakeDocument, parser, blockRenderer);
+        this.normalizer.normalize(fakeDocument, this.parser, this.blockRenderer);
 
         verify(fakeDocument, never()).setContent(any(XDOM.class));
         assertEquals(0, fakeDocument.getXDOM().getBlocks(
@@ -86,47 +86,47 @@ public class ContentDocumentNormalizerTest
     }
 
     @Test
-    public void normalizeWithOneNormalizedLinkInContent() throws Exception
+    void normalizeWithOneNormalizedLinkInContent() throws Exception
     {
         // Note: the content of the XDOM doesn't matter for the test since all depends on the return value of
         // the called XDOM normalizer.
-        XDOM xdom = new XDOM(Collections.emptyList());
+        XDOM xdom = new XDOM(List.of());
         XWikiDocument fakeDocument = URLNormalizationHelper.mockXWikiDocument(xdom);
 
         when(this.linkXDOMNormalizer.normalize(xdom, this.parser, this.blockRenderer)).thenReturn(true);
 
-        this.mocker.getComponentUnderTest().normalize(fakeDocument, this.parser, this.blockRenderer);
+        this.normalizer.normalize(fakeDocument, this.parser, this.blockRenderer);
 
         verify(fakeDocument, times(1)).setContent(any(XDOM.class));
     }
 
     @Test
-    public void normalizeWithOneNormalizedLinkInMacroContent() throws Exception
+    void normalizeWithOneNormalizedLinkInMacroContent() throws Exception
     {
         // Note: the content of the XDOM doesn't matter for the test since all depends on the return value of
         // the called XDOM normalizer.
-        XDOM xdom = new XDOM(Collections.emptyList());
+        XDOM xdom = new XDOM(List.of());
         XWikiDocument fakeDocument = URLNormalizationHelper.mockXWikiDocument(xdom);
 
         when(this.macroXDOMNormalizer.normalize(xdom, this.parser, this.blockRenderer)).thenReturn(true);
 
-        this.mocker.getComponentUnderTest().normalize(fakeDocument, this.parser, this.blockRenderer);
+        this.normalizer.normalize(fakeDocument, this.parser, this.blockRenderer);
 
         verify(fakeDocument, times(1)).setContent(any(XDOM.class));
     }
 
     @Test
-    public void normalizeWithNormalizedLinksInContentAndMacroContent() throws Exception
+    void normalizeWithNormalizedLinksInContentAndMacroContent() throws Exception
     {
         // Note: the content of the XDOM doesn't matter for the test since all depends on the return value of
         // the called XDOM normalizer.
-        XDOM xdom = new XDOM(Collections.emptyList());
+        XDOM xdom = new XDOM(List.of());
         XWikiDocument fakeDocument = URLNormalizationHelper.mockXWikiDocument(xdom);
 
         when(this.linkXDOMNormalizer.normalize(xdom, this.parser, this.blockRenderer)).thenReturn(true);
         when(this.macroXDOMNormalizer.normalize(xdom, this.parser, this.blockRenderer)).thenReturn(true);
 
-        this.mocker.getComponentUnderTest().normalize(fakeDocument, this.parser, this.blockRenderer);
+        this.normalizer.normalize(fakeDocument, this.parser, this.blockRenderer);
 
         verify(fakeDocument, times(1)).setContent(any(XDOM.class));
     }

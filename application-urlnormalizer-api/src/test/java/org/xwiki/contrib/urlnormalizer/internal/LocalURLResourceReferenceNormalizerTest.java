@@ -19,7 +19,7 @@
  */
 package org.xwiki.contrib.urlnormalizer.internal;
 
-import java.util.Arrays;
+import java.util.List;
 import java.util.regex.Pattern;
 
 import javax.inject.Named;
@@ -89,7 +89,7 @@ class LocalURLResourceReferenceNormalizerTest
     private URLNormalizerConfigurationStore store;
 
     @BeforeEach
-    public void beforeEach() throws Exception
+    void beforeEach()
     {
         ServletRequest request = mock(ServletRequest.class);
         when(this.container.getRequest()).thenReturn(request);
@@ -244,21 +244,24 @@ class LocalURLResourceReferenceNormalizerTest
     @Test
     void normalizeWithAFilter() throws Exception
     {
-        when(this.store.getFilters(null)).thenReturn(Arrays.asList(
+        when(this.store.getFilters(null)).thenReturn(List.of(
             new DefaultURLNormalizerFilter(ResourceType.ATTACHMENT, Pattern.compile("re(.*)"),
                 ResourceType.DOCUMENT, "filtered-${1}"),
             new DefaultURLNormalizerFilter(ResourceType.ATTACHMENT, Pattern.compile("otherrefe(?<name>.*)"),
                 ResourceType.DOCUMENT, "filtered-${name}")));
 
-        assertEquals(new ResourceReference("reference", ResourceType.DATA), this.normalizer.normalize(new ResourceReference("reference", ResourceType.DATA)));
-        assertEquals(new ResourceReference("filtered-ference", ResourceType.DOCUMENT), this.normalizer.normalize(new ResourceReference("reference", ResourceType.ATTACHMENT)));
-        assertEquals(new ResourceReference("filtered-rence", ResourceType.DOCUMENT), this.normalizer.normalize(new ResourceReference("otherreference", ResourceType.ATTACHMENT)));
+        assertEquals(new ResourceReference("reference", ResourceType.DATA),
+            this.normalizer.normalize(new ResourceReference("reference", ResourceType.DATA)));
+        assertEquals(new ResourceReference("filtered-ference", ResourceType.DOCUMENT),
+            this.normalizer.normalize(new ResourceReference("reference", ResourceType.ATTACHMENT)));
+        assertEquals(new ResourceReference("filtered-rence", ResourceType.DOCUMENT),
+            this.normalizer.normalize(new ResourceReference("otherreference", ResourceType.ATTACHMENT)));
     }
 
     @Test
     void normalizeWithAFilterWithNullLinkType() throws Exception
     {
-        when(this.store.getFilters(null)).thenReturn(Arrays.asList(
+        when(this.store.getFilters(null)).thenReturn(List.of(
             new DefaultURLNormalizerFilter(null, Pattern.compile("re(.*)"), ResourceType.DOCUMENT, "filtered-${1}")));
 
         assertEquals(new ResourceReference("filtered-ference", ResourceType.DOCUMENT),
@@ -270,7 +273,7 @@ class LocalURLResourceReferenceNormalizerTest
     @Test
     void normalizeWhenDisablingURLPointsToWikiLink() throws Exception
     {
-        when(this.store.getFilters(null)).thenReturn(Arrays.asList(
+        when(this.store.getFilters(null)).thenReturn(List.of(
             new DefaultURLNormalizerFilter(ResourceType.URL, Pattern.compile("http://my.some.domain/xwiki/bin/view/A/B"),
                 null, null)));
 

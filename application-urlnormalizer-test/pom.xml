@@ -29,9 +29,8 @@
   </parent>
   <artifactId>application-urlnormalizer-test</artifactId>
   <packaging>pom</packaging>
-  <name>URL Normalizer - Test</name>
+  <name>Wiki Link URL Normalizer - Test</name>
   <description>Test of the URL Normalizer application</description>
-
   <profiles>
     <profile>
       <id>docker</id>

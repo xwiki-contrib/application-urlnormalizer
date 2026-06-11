@@ -33,7 +33,6 @@
   <properties>
     <!-- Functional tests are allowed to output content to the console -->
     <xwiki.surefire.captureconsole.skip>true</xwiki.surefire.captureconsole.skip>
-
     <!-- Lower version of Docker does not work anymore -->
     <dockerJava.version>3.3.6</dockerJava.version>
   </properties>
@@ -75,7 +74,6 @@
       <artifactId>xwiki-rendering-macro-html</artifactId>
       <version>${rendering.version}</version>
     </dependency>
-
     <!-- Test dependencies -->
     <dependency>
       <groupId>org.xwiki.platform</groupId>

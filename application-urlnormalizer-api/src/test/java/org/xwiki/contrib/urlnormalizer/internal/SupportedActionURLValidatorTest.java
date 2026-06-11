@@ -19,50 +19,50 @@
  */
 package org.xwiki.contrib.urlnormalizer.internal;
 
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.xwiki.model.reference.AttachmentReference;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.resource.entity.EntityResourceAction;
 import org.xwiki.resource.entity.EntityResourceReference;
-import org.xwiki.test.mockito.MockitoComponentMockingRule;
+import org.xwiki.test.junit5.mockito.ComponentTest;
+import org.xwiki.test.junit5.mockito.InjectMockComponents;
 
-import static junit.framework.TestCase.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Unit tests for {@link SupportedActionURLValidator}.
  *
  * @version $Id:$
  */
-public class SupportedActionURLValidatorTest
+@ComponentTest
+class SupportedActionURLValidatorTest
 {
-    @Rule
-    public MockitoComponentMockingRule<SupportedActionURLValidator> mocker =
-        new MockitoComponentMockingRule<>(SupportedActionURLValidator.class);
+    @InjectMockComponents
+    private SupportedActionURLValidator validator;
 
     @Test
-    public void validateWhenViewURL() throws Exception
+    void validateWhenViewURL()
     {
         EntityResourceReference reference =
             new EntityResourceReference(new DocumentReference("wiki", "space", "page"), EntityResourceAction.VIEW);
-        assertTrue(this.mocker.getComponentUnderTest().validate(reference));
+        assertTrue(this.validator.validate(reference));
     }
 
     @Test
-    public void validateWhenDownloadURL() throws Exception
+    void validateWhenDownloadURL()
     {
         EntityResourceReference reference = new EntityResourceReference(
             new AttachmentReference("attachment", new DocumentReference("wiki", "space", "page")),
             new EntityResourceAction("download"));
-        assertTrue(this.mocker.getComponentUnderTest().validate(reference));
+        assertTrue(this.validator.validate(reference));
     }
 
     @Test
-    public void validateWhenEditURL() throws Exception
+    void validateWhenEditURL()
     {
         EntityResourceReference reference = new EntityResourceReference(
             new DocumentReference("wiki", "space", "page"), new EntityResourceAction("edit"));
-        assertFalse(this.mocker.getComponentUnderTest().validate(reference));
+        assertFalse(this.validator.validate(reference));
     }
 }

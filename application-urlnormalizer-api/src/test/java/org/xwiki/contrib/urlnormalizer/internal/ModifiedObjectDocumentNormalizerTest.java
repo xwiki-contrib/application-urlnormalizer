@@ -19,14 +19,12 @@
  */
 package org.xwiki.contrib.urlnormalizer.internal;
 
-import java.util.Collections;
+import java.util.List;
 
 import javax.inject.Named;
 
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.rendering.block.Block;
 import org.xwiki.rendering.block.XDOM;
@@ -125,13 +123,13 @@ class ModifiedObjectDocumentNormalizerTest
         when(document.getXObject(baseObjectClass, 0)).thenReturn(baseObject);
 
         when(document.getObjectDiff(eq(originalDocument), eq(document), any(XWikiContext.class)))
-            .thenReturn(Collections.singletonList(Collections.singletonList(diff)));
+            .thenReturn(List.of(List.of(diff)));
     }
 
     @Test
     void normalizeWithModifiedXProperty() throws Exception
     {
-        XDOM xdom = new XDOM(Collections.emptyList());
+        XDOM xdom = new XDOM(List.of());
         XWikiDocument fakeDocument = URLNormalizationHelper.mockXWikiDocument(xdom);
 
         // Create the property that will be inspected
@@ -143,19 +141,14 @@ class ModifiedObjectDocumentNormalizerTest
 
         // Note: the content of the XDOM doesn't matter for the test since all depends on the return value of
         // the called XDOM normalizer.
-        XDOM propertyXDOM = new XDOM(Collections.emptyList());
+        XDOM propertyXDOM = new XDOM(List.of());
         when(this.parser.parse(any())).thenReturn(propertyXDOM);
 
         when(this.linkXDOMNormalizer.normalize(propertyXDOM, this.parser, this.blockRenderer)).thenReturn(true);
 
-        doAnswer(new Answer<Void>()
-        {
-            @Override
-            public Void answer(InvocationOnMock invocation)
-            {
-                ((DefaultWikiPrinter) invocation.getArguments()[1]).print("normalizedContent");
-                return null;
-            }
+        doAnswer(invocation -> {
+            ((DefaultWikiPrinter) invocation.getArguments()[1]).print("normalizedContent");
+            return null;
         }).when(this.blockRenderer).render(any(Block.class), any(WikiPrinter.class));
 
         this.normalize.normalize(fakeDocument, this.parser, this.blockRenderer);
@@ -166,7 +159,7 @@ class ModifiedObjectDocumentNormalizerTest
     @Test
     void normalizeWithModifiedNonTextAreaXProperty() throws Exception
     {
-        XDOM xdom = new XDOM(Collections.emptyList());
+        XDOM xdom = new XDOM(List.of());
         XWikiDocument fakeDocument = URLNormalizationHelper.mockXWikiDocument(xdom);
 
         // Create the property that will be inspected

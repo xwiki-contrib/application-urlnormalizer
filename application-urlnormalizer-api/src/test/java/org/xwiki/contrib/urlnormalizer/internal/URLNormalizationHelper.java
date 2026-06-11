@@ -19,13 +19,7 @@
  */
 package org.xwiki.contrib.urlnormalizer.internal;
 
-import java.util.Arrays;
-import java.util.List;
-
-import org.xwiki.rendering.block.LinkBlock;
-import org.xwiki.rendering.block.ParagraphBlock;
 import org.xwiki.rendering.block.XDOM;
-import org.xwiki.rendering.internal.parser.XDOMBuilder;
 import org.xwiki.rendering.syntax.Syntax;
 
 import com.xpn.xwiki.doc.XWikiDocument;
@@ -33,24 +27,11 @@ import com.xpn.xwiki.doc.XWikiDocument;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-public class URLNormalizationHelper
+final class URLNormalizationHelper
 {
-    /**
-     * Create a new {@link XDOM} by introducing a given list of {@link LinkBlock} in it.
-     *
-     * @param linkBlocks the blocks to use
-     * @return the result XDOM
-     */
-    public static XDOM mockXDOM(List<LinkBlock> linkBlocks)
+    private URLNormalizationHelper()
     {
-        XDOMBuilder builder = new XDOMBuilder();
-
-        // Add the LinkBlocks to a new XDOM
-        for (LinkBlock linkBlock : linkBlocks) {
-            builder.addBlock(new ParagraphBlock(Arrays.asList(linkBlock)));
-        }
-
-        return builder.getXDOM();
+        // Utility class.
     }
 
     /**
@@ -59,7 +40,7 @@ public class URLNormalizationHelper
      * @param xdom the {@link XDOM} object to use in the mock
      * @return the mocked document
      */
-    public static XWikiDocument mockXWikiDocument(XDOM xdom)
+    static XWikiDocument mockXWikiDocument(XDOM xdom)
     {
         XWikiDocument fakeDocument = mock(XWikiDocument.class);
         when(fakeDocument.getXDOM()).thenReturn(xdom);

@@ -61,7 +61,7 @@ class LocalURLValidatorTest
     private LocalURLValidator validator;
 
     @BeforeEach
-    public void beforeEach() throws Exception
+    void beforeEach()
     {
         when(this.urlConfiguration.getURLFormatId()).thenReturn("standard");
     }

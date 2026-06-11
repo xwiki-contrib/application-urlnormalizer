@@ -21,10 +21,13 @@ package org.xwiki.contrib.urlnormalizer.internal;
 
 import java.util.ArrayList;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.xwiki.contrib.urlnormalizer.ResourceReferenceNormalizer;
 import org.xwiki.rendering.block.Block;
 import org.xwiki.rendering.block.ParagraphBlock;
 import org.xwiki.rendering.listener.reference.ResourceReference;
+import org.xwiki.test.junit5.mockito.ComponentTest;
+import org.xwiki.test.junit5.mockito.MockComponent;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -35,8 +38,10 @@ import static org.mockito.Mockito.when;
  * @version $Id$
  * @since 1.9.0
  */
-public abstract class AbstractResourceReferenceXDOMNormalizerTest
+@ComponentTest
+abstract class AbstractResourceReferenceXDOMNormalizerTest
 {
+    @MockComponent
     protected ResourceReferenceNormalizer resourceReferenceNormalizer;
 
     // A link to the wiki written as a standard wiki link
@@ -49,20 +54,23 @@ public abstract class AbstractResourceReferenceXDOMNormalizerTest
 
     protected Block parentBlock;
 
-    public void setUp() throws Exception
+    @BeforeEach
+    void setUp()
     {
-        parentBlock = new ParagraphBlock(new ArrayList<>());
+        this.parentBlock = new ParagraphBlock(new ArrayList<>());
 
-        internalLinkReference = mock(ResourceReference.class);
-        when(internalLinkReference.getReference()).thenReturn("Internal reference");
+        this.internalLinkReference = mock(ResourceReference.class);
+        when(this.internalLinkReference.getReference()).thenReturn("Internal reference");
 
-        externalLinkReference = mock(ResourceReference.class);
-        when(externalLinkReference.getReference()).thenReturn("External reference");
+        this.externalLinkReference = mock(ResourceReference.class);
+        when(this.externalLinkReference.getReference()).thenReturn("External reference");
 
-        normalizedExternalLinkReference = mock(ResourceReference.class);
-        when(normalizedExternalLinkReference.getReference()).thenReturn("External normalized link reference");
+        this.normalizedExternalLinkReference = mock(ResourceReference.class);
+        when(this.normalizedExternalLinkReference.getReference()).thenReturn("External normalized link reference");
 
-        when(resourceReferenceNormalizer.normalize(internalLinkReference)).thenReturn(internalLinkReference);
-        when(resourceReferenceNormalizer.normalize(externalLinkReference)).thenReturn(normalizedExternalLinkReference);
+        when(this.resourceReferenceNormalizer.normalize(this.internalLinkReference))
+            .thenReturn(this.internalLinkReference);
+        when(this.resourceReferenceNormalizer.normalize(this.externalLinkReference))
+            .thenReturn(this.normalizedExternalLinkReference);
     }
 }

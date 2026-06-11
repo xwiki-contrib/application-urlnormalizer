@@ -20,13 +20,12 @@
 package org.xwiki.contrib.urlnormalizer.internal;
 
 import java.io.Reader;
-import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 import javax.inject.Named;
 
 import org.junit.jupiter.api.Test;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
 import org.xwiki.rendering.block.Block;
 import org.xwiki.rendering.block.MacroBlock;
 import org.xwiki.rendering.block.WordBlock;
@@ -67,19 +66,18 @@ class MacroXDOMNormalizerTest
     private MacroXDOMNormalizer macroNormalizer;
 
     @Test
-    void normalizeWhenNoMacros() throws Exception
+    void normalizeWhenNoMacros()
     {
-        assertFalse(this.macroNormalizer.normalize(new XDOM(Collections.emptyList()), null, null));
+        assertFalse(this.macroNormalizer.normalize(new XDOM(List.of()), null, null));
     }
 
     @Test
     void normalizeWithMacroAndNoLinks() throws Exception
     {
-        XDOM xdom =
-            new XDOM(Collections.singletonList(new MacroBlock("info", Collections.emptyMap(), "content", false)));
+        XDOM xdom = new XDOM(List.of(new MacroBlock("info", Map.of(), "content", false)));
 
         Parser parser = mock(Parser.class);
-        XDOM macroXDOM = new XDOM(Collections.singletonList(new WordBlock("content")));
+        XDOM macroXDOM = new XDOM(List.of(new WordBlock("content")));
         when(parser.parse(any(Reader.class))).thenReturn(macroXDOM);
 
         assertFalse(this.macroNormalizer.normalize(xdom, parser, null));
@@ -90,23 +88,17 @@ class MacroXDOMNormalizerTest
     {
         MarkupContainingMacroBlockMatcherTest.mockMacro(this.macroManager, "info", true);
 
-        XDOM xdom =
-            new XDOM(Collections.singletonList(new MacroBlock("info", Collections.emptyMap(), "content", false)));
+        XDOM xdom = new XDOM(List.of(new MacroBlock("info", Map.of(), "content", false)));
 
         Parser parser = mock(Parser.class);
         when(parser.getSyntax()).thenReturn(MarkupContainingMacroBlockMatcherTest.SYNTAX);
-        XDOM macroXDOM = new XDOM(Collections.emptyList());
+        XDOM macroXDOM = new XDOM(List.of());
         when(parser.parse(any(Reader.class))).thenReturn(macroXDOM);
 
         BlockRenderer blockRenderer = mock(BlockRenderer.class);
-        doAnswer(new Answer<Void>()
-        {
-            @Override
-            public Void answer(InvocationOnMock invocation)
-            {
-                ((DefaultWikiPrinter) invocation.getArguments()[1]).print("normalizedMacroContent");
-                return null;
-            }
+        doAnswer(invocation -> {
+            ((DefaultWikiPrinter) invocation.getArguments()[1]).print("normalizedMacroContent");
+            return null;
         }).when(blockRenderer).render(any(Block.class), any(WikiPrinter.class));
 
         when(this.linkNormalizer.normalize(any(XDOM.class), any(Parser.class), any(BlockRenderer.class)))

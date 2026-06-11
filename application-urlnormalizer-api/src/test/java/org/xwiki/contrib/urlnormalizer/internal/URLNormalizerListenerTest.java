@@ -19,17 +19,8 @@
  */
 package org.xwiki.contrib.urlnormalizer.internal;
 
-import org.junit.Before;
-import org.junit.Rule;
-import org.xwiki.contrib.urlnormalizer.DocumentNormalizer;
-import org.xwiki.rendering.parser.Parser;
-import org.xwiki.rendering.renderer.BlockRenderer;
-import org.xwiki.rendering.syntax.Syntax;
-import org.xwiki.test.mockito.MockitoComponentMockingRule;
-
-import com.xpn.xwiki.XWikiContext;
-
-import static org.mockito.Mockito.mock;
+import org.xwiki.test.junit5.mockito.ComponentTest;
+import org.xwiki.test.junit5.mockito.InjectMockComponents;
 
 /**
  * Unit tests for {@link URLNormalizerListener}.
@@ -37,33 +28,11 @@ import static org.mockito.Mockito.mock;
  * @version $Id$
  * @since 1.0
  */
-public class URLNormalizerListenerTest
+@ComponentTest
+class URLNormalizerListenerTest
 {
-    @Rule
-    public final MockitoComponentMockingRule<URLNormalizerListener> mocker =
-        new MockitoComponentMockingRule<>(URLNormalizerListener.class);
-
-    private XWikiContext context;
-
-    private BlockRenderer blockRenderer;
-
-    private Parser parser;
-
-    private DocumentNormalizer contentDocumentNormalizer;
-
-    private DocumentNormalizer modifiedObjectDocumentNormalizer;
-
-    @Before
-    public void setUp() throws Exception
-    {
-        this.parser = this.mocker.registerMockComponent(Parser.class, Syntax.XWIKI_2_1.toIdString());
-        this.blockRenderer = this.mocker.registerMockComponent(BlockRenderer.class, Syntax.XWIKI_2_1.toIdString());
-        this.contentDocumentNormalizer = this.mocker.registerMockComponent(DocumentNormalizer.class, "content");
-        this.modifiedObjectDocumentNormalizer =
-            this.mocker.registerMockComponent(DocumentNormalizer.class, "object/modified");
-
-        this.context = mock(XWikiContext.class);
-    }
+    @InjectMockComponents
+    private URLNormalizerListener listener;
 
     /**
     @Test

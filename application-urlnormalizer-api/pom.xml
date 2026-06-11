@@ -36,6 +36,11 @@
 
     <!-- Various listeners and caches needs to be unique in a single XWiki instances -->
     <xwiki.extension.namespaces>{root}</xwiki.extension.namespaces>
+
+    <!-- On Java 21+, Mockito loads its ByteBuddy agent dynamically, which makes the JVM print a warning to the
+         console. That warning is then caught by the console-capture check and fails the build. Tell the JVM that
+         dynamic agent loading is expected so that the warning is not printed. -->
+    <argLine>-XX:+EnableDynamicAgentLoading</argLine>
   </properties>
   <dependencies>
     <dependency>
