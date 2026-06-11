@@ -29,12 +29,11 @@ import org.xwiki.test.docker.junit5.UITest;
  * @version $Id$
  */
 @UITest
-public class AllITs
+public class AllIT
 {
     @Nested
     @DisplayName("URL Normalizer")
     class NestedURLNormalizerTest extends URLNormalizerIT
     {
     }
-
 }

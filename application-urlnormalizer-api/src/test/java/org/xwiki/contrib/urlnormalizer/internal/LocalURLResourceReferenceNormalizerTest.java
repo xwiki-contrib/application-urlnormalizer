@@ -36,6 +36,7 @@ import org.xwiki.model.reference.AttachmentReference;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.EntityReference;
 import org.xwiki.model.reference.EntityReferenceSerializer;
+import org.xwiki.rendering.listener.reference.DocumentResourceReference;
 import org.xwiki.rendering.listener.reference.ResourceReference;
 import org.xwiki.rendering.listener.reference.ResourceType;
 import org.xwiki.resource.CreateResourceTypeException;
@@ -131,14 +132,21 @@ class LocalURLResourceReferenceNormalizerTest
         }
     }
 
+    /**
+     * A local URL with a fragment should be normalized into a wiki link while preserving the fragment as the link
+     * anchor, e.g. {@code http://localhost:8080/xwiki/bin/Main/WebHome#anchor} -> {@code doc:Main.WebHome||anchor
+     * ="anchor"}.
+     */
     @Test
-    void normalizeWhenURLContainsAReference() throws Exception
+    void normalizeWhenURLContainsAnchor() throws Exception
     {
         org.xwiki.resource.ResourceType type = new org.xwiki.resource.ResourceType("entity");
         when(this.typeResolver.resolve(any(ExtendedURL.class), any())).thenReturn(type);
 
         EntityReference entityReference = new DocumentReference("wiki", "A", "B");
         EntityResourceReference err = new EntityResourceReference(entityReference, new EntityResourceAction("view"));
+        // The resolver populates the anchor from the URL fragment (XWIKI-20870).
+        err.setAnchor("anchor");
         when(this.resolver.resolve(any(ExtendedURL.class), eq(type), any())).thenReturn(err);
 
         when(this.localURLValidator.validate(any(ExtendedURL.class))).thenReturn(true);
@@ -148,11 +156,45 @@ class LocalURLResourceReferenceNormalizerTest
         when(this.compactwikiSerializer.serialize(entityReference)).thenReturn("A.B");
 
         ResourceReference reference =
-            new ResourceReference("http://my.some.domain/xwiki/bin/view/A/B#reference", ResourceType.URL);
+            new ResourceReference("http://my.some.domain/xwiki/bin/view/A/B#anchor", ResourceType.URL);
         ResourceReference normalizedReference = this.normalizer.normalize(reference);
 
-        assertEquals(ResourceType.URL, normalizedReference.getType());
-        assertEquals("http://my.some.domain/xwiki/bin/view/A/B#reference", normalizedReference.getReference());
+        assertEquals(ResourceType.DOCUMENT, normalizedReference.getType());
+        assertEquals("A.B", normalizedReference.getReference());
+        assertEquals("anchor", normalizedReference.getParameter(DocumentResourceReference.ANCHOR));
+    }
+
+    /**
+     * Verifies when the URL has both a query string and a fragment, e.g.
+     * {@code http://localhost:8080/xwiki/bin/view/A/B?a=b#anchor}. Both the query string parameters and the anchor
+     * must be preserved.
+     */
+    @Test
+    void normalizeWhenURLContainsAnchorAndQueryString() throws Exception
+    {
+        org.xwiki.resource.ResourceType type = new org.xwiki.resource.ResourceType("entity");
+        when(this.typeResolver.resolve(any(ExtendedURL.class), any())).thenReturn(type);
+
+        EntityReference entityReference = new DocumentReference("wiki", "A", "B");
+        EntityResourceReference err = new EntityResourceReference(entityReference, new EntityResourceAction("view"));
+        err.addParameter("a", "b");
+        err.setAnchor("anchor");
+        when(this.resolver.resolve(any(ExtendedURL.class), eq(type), any())).thenReturn(err);
+
+        when(this.localURLValidator.validate(any(ExtendedURL.class))).thenReturn(true);
+
+        when(this.actionURLValidator.validate(err)).thenReturn(true);
+
+        when(this.compactwikiSerializer.serialize(entityReference)).thenReturn("A.B");
+
+        ResourceReference reference =
+            new ResourceReference("http://my.some.domain/xwiki/bin/view/A/B?a=b#anchor", ResourceType.URL);
+        ResourceReference normalizedReference = this.normalizer.normalize(reference);
+
+        assertEquals(ResourceType.DOCUMENT, normalizedReference.getType());
+        assertEquals("A.B", normalizedReference.getReference());
+        assertEquals("b", normalizedReference.getParameter("a"));
+        assertEquals("anchor", normalizedReference.getParameter(DocumentResourceReference.ANCHOR));
     }
 
     @Test

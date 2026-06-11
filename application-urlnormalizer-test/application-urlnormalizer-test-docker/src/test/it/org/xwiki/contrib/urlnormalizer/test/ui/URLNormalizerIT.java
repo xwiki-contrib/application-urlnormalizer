@@ -92,9 +92,9 @@ class URLNormalizerIT
         content.append(String.format("[[Main page>>%s]]\n", absoluteInternalUrl + "?xpage=xml"));
         expectedResultBuilder.append("[[Main page>>doc:Main.WebHome||queryString=\"xpage=xml\"]]\n");
 
-        // Test that we ignore fragments FTM, see https://jira.xwiki.org/browse/URLNORMALZ-11
+        // Test that we support fragments
         content.append(String.format("[[Main page>>%s]]\n", absoluteInternalUrl + "#anchor"));
-        expectedResultBuilder.append(String.format("[[Main page>>%s]]\n", absoluteInternalUrl + "#anchor"));
+        expectedResultBuilder.append("[[Main page>>doc:Main.WebHome||anchor=\"anchor\"]]\n");
 
         // Test for a classic wiki link
         content.append("[[Main page>>doc:Main.WebHome]]\n");

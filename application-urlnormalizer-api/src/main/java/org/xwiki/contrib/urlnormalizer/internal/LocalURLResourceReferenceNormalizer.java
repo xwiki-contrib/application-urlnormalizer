@@ -43,6 +43,7 @@ import org.xwiki.contrib.urlnormalizer.URLValidator;
 import org.xwiki.contrib.urlnormalizer.internal.configuration.URLNormalizerConfigurationStore;
 import org.xwiki.model.EntityType;
 import org.xwiki.model.reference.EntityReferenceSerializer;
+import org.xwiki.rendering.listener.reference.DocumentResourceReference;
 import org.xwiki.rendering.listener.reference.ResourceReference;
 import org.xwiki.rendering.listener.reference.ResourceType;
 import org.xwiki.resource.ResourceReferenceResolver;
@@ -123,7 +124,7 @@ public class LocalURLResourceReferenceNormalizer implements ResourceReferenceNor
                         return value;
                     }).replace(filter.getTargetReference());
 
-                    // Create a the target reference
+                    // Create the target reference
                     ResourceReference filteredReference =
                         new ResourceReference(targetReference, filter.getTargetType());
                     filteredReference.setParameters(sourceReference.getParameters());
@@ -160,9 +161,9 @@ public class LocalURLResourceReferenceNormalizer implements ResourceReferenceNor
                 normalizedReference = normalizeURL(new URL(reference.getReference()), reference);
             }
         } catch (Exception e) {
-            // An error happened during normalization. Ideally we should log it as a warning. The problem is that
+            // An error happened during normalization. Ideally, we should log it as a warning. The problem is that
             // the URL parser we use will generate a CreateResourceReferenceException if the URL to parse is not a
-            // local URL. Thus we need to ignore all errors in order to avoid spurious logs for the user.
+            // local URL. Thus, we need to ignore all errors to avoid spurious logs for the user.
             // That's why we log it only at debug level.
             this.logger.debug("Failed to normalize URL [{}] into a wiki link", reference.getReference(), e);
         }
@@ -172,16 +173,12 @@ public class LocalURLResourceReferenceNormalizer implements ResourceReferenceNor
 
     private ResourceReference normalizeURL(URL referenceURL, ResourceReference reference) throws Exception
     {
-        // Ignore URLs with a reference since they are not supported right now
-        // FIXME: remove when https://jira.xwiki.org/browse/URLNORMALZ-11 is fixed
         ResourceReference normalizedReference = reference;
-        if (StringUtils.isEmpty(referenceURL.getRef())) {
-            ServletRequest servletRequest = (ServletRequest) this.container.getRequest();
-            ExtendedURL extendedURL =
-                new ExtendedURL(referenceURL, servletRequest.getHttpServletRequest().getContextPath());
-            if (this.localURLValidator.validate(extendedURL)) {
-                normalizedReference = resolveReference(extendedURL, reference);
-            }
+        ServletRequest servletRequest = (ServletRequest) this.container.getRequest();
+        ExtendedURL extendedURL =
+            new ExtendedURL(referenceURL, servletRequest.getHttpServletRequest().getContextPath());
+        if (this.localURLValidator.validate(extendedURL)) {
+            normalizedReference = resolveReference(extendedURL, reference);
         }
 
         return normalizedReference;
@@ -197,7 +194,7 @@ public class LocalURLResourceReferenceNormalizer implements ResourceReferenceNor
             EntityResourceReference err =
                 (EntityResourceReference) this.resolver.resolve(extendedURL, type, Collections.emptyMap());
 
-            // At this point we're sure that the URL is pointing to a wiki link but we still need to verify that we
+            // At this point we're sure that the URL is pointing to a wiki link, but we still need to verify that we
             // point to a URL for a supported action (view or download) since wiki links only support some actions ATM.
             if (this.actionURLValidator.validate(err)) {
                 // We need to handle both Attachment and Document resource types
@@ -216,14 +213,24 @@ public class LocalURLResourceReferenceNormalizer implements ResourceReferenceNor
                 // Any query string parameter in the ExtendedURL will find their ways as parameters in
                 // EntityResourceReference. We need to copy them in the normalized ResourceReference.
                 // Also note that the original ResourceReference could theoretically have existing parameters that we
-                // should keep. However in practice this is not possible since there's no markup syntax for that and
+                // should keep. However, in practice this is not possible since there's no markup syntax for that and
                 // thus we can safely ignore it.
                 for (Map.Entry<String, List<String>> parameter : err.getParameters().entrySet()) {
                     // Note: EntityResourceReference supports having several parameters with the same name but
                     // ResourceReference doesn't.
-                    // However since our original input is a ResourceReference, there's no risk of having several
-                    // parameters with the same name and we can safely take the first one!...
+                    // However, since our original input is a ResourceReference, there's no risk of having several
+                    // parameters with the same name, and we can safely take the first one!...
                     normalizedReference.setParameter(parameter.getKey(), parameter.getValue().get(0));
+                }
+
+                // Handle the anchor (URL fragment).
+                //
+                // The resolver populates the anchor on the EntityResourceReference from the URL fragment.
+                // We expose it as an "anchor" parameter on the normalized ResourceReference so that the XDOM
+                // normalizers can turn it into a link "anchor" parameter
+                // (e.g. [[label>>doc:A.B||anchor="anchor"]]).
+                if (!StringUtils.isEmpty(err.getAnchor())) {
+                    normalizedReference.setParameter(DocumentResourceReference.ANCHOR, err.getAnchor());
                 }
             }
         }

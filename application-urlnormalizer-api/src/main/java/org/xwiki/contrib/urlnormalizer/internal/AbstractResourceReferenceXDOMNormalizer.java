@@ -43,7 +43,7 @@ import org.xwiki.rendering.parser.Parser;
 import org.xwiki.rendering.renderer.BlockRenderer;
 
 /**
- * Abstract providing tools to normalize blocks relying on resource references.
+ * Abstract class providing tools to normalize blocks relying on resource references.
  *
  * @param <T> the type of block handled by the normalizer
  * @version $Id$
@@ -88,8 +88,8 @@ public abstract class AbstractResourceReferenceXDOMNormalizer<T extends Block> i
     {
         // Note: We need to merge the query string parameters coming from the URL (and stored as parameters in
         // the normalized ResourceReference) with any existing "queryString" Block parameters.
-        // If a query string parameter name exists in the original link and the same parameter name also exists in
-        // the URL but the values are different then skip the normalization for this link block in order not to
+        // If a query string parameter name exists in the original link, and the same parameter name also exists in
+        // the URL, but the values are different, then skip the normalization for this link block in order not to
         // cause any loss of data! (even though having link block parameters for a URL has no meaning).
 
         boolean shouldAbortNormalization = false;
@@ -104,6 +104,11 @@ public abstract class AbstractResourceReferenceXDOMNormalizer<T extends Block> i
         }
 
         for (Map.Entry<String, String> parameter : newReference.getParameters().entrySet()) {
+            // The anchor is not a query string parameter: it's handled separately (see handleAnchor) and rendered as
+            // a dedicated link "anchor" parameter. Skip it here so that it doesn't end up in the query string.
+            if (DocumentResourceReference.ANCHOR.equals(parameter.getKey())) {
+                continue;
+            }
             NameValuePair newParameter = new BasicNameValuePair(parameter.getKey(), parameter.getValue());
             if (hasDifferentValue(newParameter, queryStringParameters)) {
                 shouldAbortNormalization = true;
@@ -126,6 +131,24 @@ public abstract class AbstractResourceReferenceXDOMNormalizer<T extends Block> i
         }
 
         return shouldAbortNormalization;
+    }
+
+    /**
+     * Move the anchor (URL fragment) carried by the normalized reference (as an "anchor" parameter) into a dedicated
+     * block "anchor" parameter, so that it's rendered as e.g. {@code [[label>>doc:A.B||anchor="anchor"]]}.
+     *
+     * @param block the block whose "anchor" parameter will be set
+     * @param newReference the normalized reference holding the anchor as an "anchor" parameter
+     */
+    protected void handleAnchor(T block, ResourceReference newReference)
+    {
+        String anchor = newReference.getParameter(DocumentResourceReference.ANCHOR);
+        if (!StringUtils.isEmpty(anchor)) {
+            block.setParameter(DocumentResourceReference.ANCHOR, anchor);
+
+            // Remove the anchor from the reference since we've now moved it to a block parameter.
+            newReference.removeParameter(DocumentResourceReference.ANCHOR);
+        }
     }
 
     protected boolean hasDifferentValue(NameValuePair newParameter, List<NameValuePair> queryStringParameters)

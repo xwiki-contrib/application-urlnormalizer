@@ -32,7 +32,7 @@ import org.xwiki.rendering.block.WordBlock;
 import org.xwiki.rendering.listener.reference.ResourceReference;
 
 /**
- * Transform local links found in the passed XDOM into wiki links.
+ * Transform local links found in the XDOM into wiki links.
  *
  * @version $Id$
  * @since 1.3
@@ -59,7 +59,7 @@ public class LinkXDOMNormalizer extends AbstractResourceReferenceXDOMNormalizer<
             ResourceReference originalReference = linkBlock.getReference();
             ResourceReference newReference = this.resourceReferenceNormalizer.normalize(originalReference);
 
-            // If no normalization happened then don't perform any change to the LinkBlock!
+            // If no normalization happened, then don't perform any change to the LinkBlock!
             if (newReference == linkBlock.getReference()) {
                 continue;
             }
@@ -67,7 +67,7 @@ public class LinkXDOMNormalizer extends AbstractResourceReferenceXDOMNormalizer<
             boolean isFreeStanding;
             List<Block> newBlockChildren = new ArrayList<>(linkBlock.getChildren());
 
-            // If we have normalized a free standing block, we have to turn it into a non free standing block and
+            // If we have normalized a freestanding block, we have to turn it into a non-freestanding block and
             // generate a label that corresponds to the original URL of the link.
             if (!linkBlock.getReference().equals(newReference) && linkBlock.isFreeStandingURI()) {
                 newBlockChildren.add(new WordBlock(linkBlock.getReference().getReference()));
@@ -80,6 +80,9 @@ public class LinkXDOMNormalizer extends AbstractResourceReferenceXDOMNormalizer<
             boolean shouldAbortNormalization = handleQueryStringParameters(linkBlock, newReference);
 
             if (!shouldAbortNormalization) {
+                // Move the anchor (URL fragment) to a link "anchor" parameter.
+                handleAnchor(linkBlock, newReference);
+
                 LinkBlock newLinkBlock =
                     new LinkBlock(newBlockChildren, newReference, isFreeStanding, linkBlock.getParameters());
 

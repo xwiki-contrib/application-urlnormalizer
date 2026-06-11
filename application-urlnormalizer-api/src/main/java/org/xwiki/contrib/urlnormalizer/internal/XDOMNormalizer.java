@@ -25,7 +25,7 @@ import org.xwiki.rendering.parser.Parser;
 import org.xwiki.rendering.renderer.BlockRenderer;
 
 /**
- * Normalize link found in blocks inside the passed XDOM (convert local links to wiki links).
+ * Normalize links found in blocks inside the passed XDOM (convert local links to wiki links).
  *
  * @version $Id$
  * @since 1.3
@@ -34,12 +34,12 @@ import org.xwiki.rendering.renderer.BlockRenderer;
 public interface XDOMNormalizer
 {
     /**
-     * Normalize link found in blocks inside the passed XDOM (convert local links to wiki links).
+     * Normalize links found in blocks inside the passed XDOM (convert local links to wiki links).
      *
-     * @param xdom the xdom to transform
+     * @param xdom the XDOM to transform
      * @param parser the parser to use when we need to parse content written in wiki markup in some Blocks
      * @param blockRenderer the renderer to use when we need to save the normalized content back into Blocks
-     * @return true if the passed XDOM has been modified (i.e. there have been normalizations) or false otherwise
+     * @return true if the passed XDOM has been modified (i.e., there have been normalizations) or false otherwise
      */
     boolean normalize(XDOM xdom, Parser parser, BlockRenderer blockRenderer);
 }

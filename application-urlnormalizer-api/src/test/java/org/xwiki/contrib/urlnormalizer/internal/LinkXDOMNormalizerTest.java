@@ -26,6 +26,7 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.xwiki.rendering.block.LinkBlock;
 import org.xwiki.rendering.block.XDOM;
+import org.xwiki.rendering.listener.reference.DocumentResourceReference;
 import org.xwiki.rendering.listener.reference.ResourceReference;
 import org.xwiki.rendering.listener.reference.ResourceType;
 import org.xwiki.test.junit5.mockito.InjectMockComponents;
@@ -34,6 +35,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 
@@ -105,6 +107,52 @@ class LinkXDOMNormalizerTest extends AbstractResourceReferenceXDOMNormalizerTest
         assertEquals("normalized", ((LinkBlock) xdom.getChildren().get(0)).getReference().getReference());
         assertEquals(1, xdom.getChildren().get(0).getParameters().size());
         assertEquals("c=d&a=b", xdom.getChildren().get(0).getParameter("queryString"));
+    }
+
+    @Test
+    void normalizeLinkBlocksWithAnchor()
+    {
+        ResourceReference reference = new ResourceReference("http://some/url#anchor", ResourceType.URL);
+
+        ResourceReference normalizedReference = new ResourceReference("normalized", ResourceType.DOCUMENT);
+        normalizedReference.setParameter(DocumentResourceReference.ANCHOR, "anchor");
+
+        when(this.resourceReferenceNormalizer.normalize(reference)).thenReturn(normalizedReference);
+
+        XDOM xdom = new XDOM(mockLinkBlocks(List.of(reference), Map.of()));
+
+        boolean modified = this.normalizer.normalize(xdom, null, null);
+
+        assertTrue(modified);
+        LinkBlock linkBlock = (LinkBlock) xdom.getChildren().get(0);
+        assertEquals("normalized", linkBlock.getReference().getReference());
+        // The anchor is rendered as a link "anchor" block parameter, e.g. [[label>>doc:normalized||anchor="anchor"]].
+        assertEquals("anchor", linkBlock.getParameter(DocumentResourceReference.ANCHOR));
+        // The anchor has been moved out of the reference and into the block parameter.
+        assertNull(linkBlock.getReference().getParameter(DocumentResourceReference.ANCHOR));
+    }
+
+    @Test
+    void normalizeLinkBlocksWithAnchorAndQueryString()
+    {
+        ResourceReference reference = new ResourceReference("http://some/url?a=b#anchor", ResourceType.URL);
+
+        ResourceReference normalizedReference = new ResourceReference("normalized", ResourceType.DOCUMENT);
+        normalizedReference.setParameter("a", "b");
+        normalizedReference.setParameter(DocumentResourceReference.ANCHOR, "anchor");
+
+        when(this.resourceReferenceNormalizer.normalize(reference)).thenReturn(normalizedReference);
+
+        XDOM xdom = new XDOM(mockLinkBlocks(List.of(reference), Map.of()));
+
+        boolean modified = this.normalizer.normalize(xdom, null, null);
+
+        assertTrue(modified);
+        LinkBlock linkBlock = (LinkBlock) xdom.getChildren().get(0);
+        assertEquals("normalized", linkBlock.getReference().getReference());
+        // The anchor must not leak into the query string.
+        assertEquals("a=b", linkBlock.getParameter("queryString"));
+        assertEquals("anchor", linkBlock.getParameter(DocumentResourceReference.ANCHOR));
     }
 
     @Test
