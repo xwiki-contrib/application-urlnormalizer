@@ -206,7 +206,16 @@ public class URLNormalizerConfigurationStore implements Initializable, Disposabl
         for (BaseObject filterObject : filterObjects) {
             if (filterObject != null) {
                 try {
-                    filters.add(loadFilter(filterObject));
+                    URLNormalizerFilter filter = loadFilter(filterObject);
+                    if (filter != null) {
+                        filters.add(filter);
+                    } else {
+                        // A filter without link reference pattern cannot match anything (it's typically a filter
+                        // added from the administration but never filled)
+                        this.logger.warn("Ignoring the URL normalizer filter located in object [{}] since it has no"
+                            + " link reference pattern. It should be either filled or removed.",
+                            filterObject.getReference());
+                    }
                 } catch (Exception e) {
                     this.logger.warn("Failed to parse filter located in object [{}]: {}", filterObject.getReference(),
                         ExceptionUtils.getRootCauseMessage(e));

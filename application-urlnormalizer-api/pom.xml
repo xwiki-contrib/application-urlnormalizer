@@ -32,7 +32,7 @@
   <properties>
     <xwiki.extension.category>api</xwiki.extension.category>
 
-    <xwiki.jacoco.instructionRatio>0.48</xwiki.jacoco.instructionRatio>
+    <xwiki.jacoco.instructionRatio>0.61</xwiki.jacoco.instructionRatio>
 
     <!-- Various listeners and caches needs to be unique in a single XWiki instances -->
     <xwiki.extension.namespaces>{root}</xwiki.extension.namespaces>
@@ -83,6 +83,13 @@
       <groupId>org.xwiki.commons</groupId>
       <artifactId>xwiki-commons-tool-test-component</artifactId>
       <version>${commons.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.xwiki.platform</groupId>
+      <artifactId>xwiki-platform-test-oldcore</artifactId>
+      <version>${platform.version}</version>
+      <type>pom</type>
       <scope>test</scope>
     </dependency>
   </dependencies>
